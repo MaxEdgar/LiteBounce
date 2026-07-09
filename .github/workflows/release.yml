@@ -1,9 +1,9 @@
-```yaml
 name: Build Release
 
 on:
   release:
-    types: [published]
+    types:
+      - published
 
 permissions:
   contents: write
@@ -16,22 +16,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: "25"
           cache: gradle
 
-      - name: Make Gradle Wrapper executable
+      - name: Make Gradle executable
         run: chmod +x gradlew
 
       - name: Build project
-        run: |
-          ./gradlew clean build --stacktrace --no-daemon
+        run: ./gradlew clean build --stacktrace --no-daemon
 
       - name: Find compiled JAR
         id: jar
@@ -39,31 +36,27 @@ jobs:
         run: |
           set -euo pipefail
 
-          JAR=$(find build/libs \
-            -maxdepth 1 \
-            -type f \
-            -name "*.jar" \
+          JAR=$(find build/libs -maxdepth 1 -type f -name "*.jar" \
             ! -name "*-sources.jar" \
             ! -name "*-javadoc.jar" \
-            | head -n1)
+            | head -n 1)
 
           if [ -z "$JAR" ]; then
-            echo "No compiled JAR was found!"
+            echo "No compiled JAR found!"
             exit 1
           fi
 
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
 
-      - name: Verify git.properties is not included
-        shell: bash
+      - name: Check git.properties
         run: |
           if find . -name "git.properties" | grep -q .; then
-            echo "git.properties detected (this is okay)."
-            echo "It will NOT be uploaded."
+            echo "git.properties exists but will not be uploaded."
+          else
+            echo "No git.properties found."
           fi
 
       - name: Upload JAR to Release
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.jar.outputs.jar }}
-```
