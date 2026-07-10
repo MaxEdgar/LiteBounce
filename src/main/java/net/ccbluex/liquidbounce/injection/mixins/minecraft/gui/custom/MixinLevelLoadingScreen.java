@@ -25,15 +25,15 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.network.chat.CommonComponents;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelLoadingScreen.class)
 public abstract class MixinLevelLoadingScreen extends MixinScreen {
 
-    @Override
-    protected void init(CallbackInfo ci) {
-        super.init(ci);
-
+    @Inject(method = "init", at = @At("TAIL"))
+    private void hookInit(CallbackInfo ci) {
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
