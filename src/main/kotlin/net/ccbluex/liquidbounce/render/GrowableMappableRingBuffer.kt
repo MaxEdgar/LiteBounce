@@ -128,7 +128,17 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
         }
 
         // At this point we know byteCount <= capacity and alignedOffset + byteCount <= capacity.
-        val buffer = ring.currentBuffer()
+        val buffer = try {
+            ring.currentBuffer()
+        } catch (e: IllegalStateException) {
+            // Intel GPU workaround: Some Intel drivers (e.g. UHD Graphics 600) don't
+            // support waiting on a fence from the current submit ("Cannot wait on a fence
+            // for the current submit"). Rotate to get a fresh buffer and try again.
+            logger.warn("Intel GPU fence workaround: rotating ring buffer '${label}' after: ${e.message}")
+            ring.rotate()
+            currentOffset = 0
+            ring.currentBuffer()
+        }
         val sliceOffset = alignedOffset.toLong()
         val slice = buffer.slice(sliceOffset, byteCount.toLong())
 
