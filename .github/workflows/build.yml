@@ -1,0 +1,110 @@
+name: Build Button
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Save
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display runner debug info
+        run: |
+          echo "========== HOSTNAME =========="
+          hostname
+          echo
+
+          echo "========== OS =========="
+          cat /etc/os-release || true
+          echo
+
+          echo "========== KERNEL =========="
+          uname -a || true
+          echo
+
+          echo "========== CPU =========="
+          lscpu || true
+          echo
+
+          echo "========== RAM =========="
+          free -h || true
+          echo
+
+          echo "========== GPU =========="
+          if command -v nvidia-smi >/dev/null 2>&1; then
+            nvidia-smi
+          else
+            echo "No NVIDIA GPU detected."
+          fi
+          echo
+
+          echo "========== DISK =========="
+          df -h || true
+          echo
+
+          echo "========== IP ADDRESS =========="
+          hostname -I || true
+          echo
+
+          echo "========== NETWORK INTERFACES =========="
+          ip addr show || true
+          echo
+
+          echo "========== RUNNER INFO =========="
+          echo "Runner name: $RUNNER_NAME"
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner architecture: $RUNNER_ARCH"
+          echo "Workspace: $GITHUB_WORKSPACE"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Build project
+        run: ./gradlew clean build --stacktrace --no-daemon
+
+      - name: Copy JAR into repository folder
+        run: |
+          mkdir -p build-output
+
+          JAR=$(find build/libs -maxdepth 1 -type f -name "*.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-javadoc.jar" \
+            | head -n 1)
+
+          if [ -z "$JAR" ]; then
+            echo "No compiled JAR found!"
+            exit 1
+          fi
+
+          cp "$JAR" build-output/
+
+          echo "Copied:"
+          ls -lh build-output
+
+      - name: Commit build output
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add build-output/
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Add build output"
+            git push origin newgen-lite
+          fi
