@@ -71,7 +71,9 @@ object ScriptManager {
      */
     fun loadAll() {
         require(isInitialized) { "Cannot load scripts before the script engine is initialized." }
-        val files = root.listFiles() ?: return
+        val files = root.listFiles { file ->
+            Source.findLanguage(file) != null || file.isDirectory
+        } ?: return
 
         files.forEach { file ->
             if (file.isDirectory) {
