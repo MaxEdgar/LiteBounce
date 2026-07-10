@@ -108,5 +108,5 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Add build output"
-            git push origin HEAD:newgen-lite --force
+            git push origin HEAD:main --force
           fi
