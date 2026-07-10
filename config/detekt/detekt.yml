@@ -22,6 +22,11 @@ complexity:
     allowedComplexity: 30
   StringLiteralDuplication:
     active: false
+  TooManyFunctions:
+    active: true
+    thresholdInClass: 60
+    thresholdInObject: 60
+    thresholdInInterface: 60
 
 performance:
   active: true

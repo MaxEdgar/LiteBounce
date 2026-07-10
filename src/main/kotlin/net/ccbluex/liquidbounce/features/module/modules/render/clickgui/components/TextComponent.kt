@@ -69,7 +69,9 @@ class TextComponent(private val textSetting: Value<String>) : Component() {
         // Truncate value if too long
         val displayValue = if (font.width(value) > getWidth() - font.width(name) - 10) {
             font.plainSubstrByWidth(value, getWidth() - font.width(name) - 10)
-        } else value
+        } else {
+            value
+        }
         context.text(font, displayValue, x2 - font.width(displayValue) - 2, y1 + 2, txtColor, false)
     }
 
