@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
+import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -105,7 +107,7 @@ object ClickGuiIcons {
             val xMin = minOf(x1, x2); val yMin = minOf(y1, y2)
             val xMax = maxOf(x1, x2); val yMax = maxOf(y1, y2)
             val thickness = 0.5f
-            if (abs(xMax - xMin) > abs(yMax - yMin)) {
+            if (kotlin.math.abs(xMax - xMin) > kotlin.math.abs(yMax - yMin)) {
                 context.drawHorizontalLine(xMin, xMax, yMin, thickness, color)
             } else {
                 context.drawVerticalLine(xMin, yMin, yMax, thickness, color)
@@ -160,5 +162,4 @@ object ClickGuiIcons {
         }
     }
 
-    private fun abs(value: Float) = if (value < 0) -value else value
 }
