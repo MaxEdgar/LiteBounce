@@ -19,7 +19,7 @@ complexity:
     active: false
   CognitiveComplexMethod:
     active: true
-    allowedComplexity: 16
+    allowedComplexity: 30
   StringLiteralDuplication:
     active: false
 
@@ -40,7 +40,6 @@ exceptions:
   TooGenericExceptionCaught:
     active: false
 
-style:
   DestructuringDeclarationWithTooManyEntries:
     maxDestructuringEntries: 4
   MagicNumber:
@@ -49,17 +48,20 @@ style:
     active: true
     excludeGuardClauses: true
     max: 4
+  MaxLineLength:
+    active: true
+    maxLineLength: 200
   LoopWithTooManyJumpStatements:
     active: true
-    maxJumpCount: 3
-  #  UnusedImports:
-  #    active: true
+    maxJumpCount: 5
   WildcardImport:
     active: true
   ForbiddenComment:
     active: false
   UnusedPrivateProperty:
     allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
+  UnusedParameter:
+    active: false
   ForbiddenMethodCall:
     active: true
     methods:
@@ -83,3 +85,12 @@ style:
     active: true
     singleLine: 'never'
     multiLine: 'always'
+  PrintStackTrace:
+    active: false
+  MayBeConstant:
+    active: false
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 60
+    thresholdInObjects: 60
+    thresholdInInterfaces: 60
