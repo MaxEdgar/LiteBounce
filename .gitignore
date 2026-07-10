@@ -4,10 +4,12 @@ Wurst7/
 # Gradle build artifacts
 build/
 .gradle/
-*.jar
 *.war
 *.zip
 *.tar.gz
+
+# But include the Gradle wrapper JAR (required for ./gradlew to work)
+!gradle/wrapper/gradle-wrapper.jar
 
 # IDE files
 .idea/
