@@ -35,8 +35,6 @@ Desktop.ini
 *.swo
 
 # Generated resources
-src/main/resources/**/*.png
-src/main/resources/**/*.jpg
 src/generated/
 
 # Node / JS dependencies
