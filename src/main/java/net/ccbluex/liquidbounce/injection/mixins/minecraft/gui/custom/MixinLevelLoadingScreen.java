@@ -21,10 +21,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.network.chat.CommonComponents;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -32,8 +34,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelLoadingScreen.class)
 public abstract class MixinLevelLoadingScreen extends MixinScreen {
 
-    @Inject(method = "init", at = @At("TAIL"))
-    private void hookInit(CallbackInfo ci) {
+    @Unique
+    private boolean liquidbounce$buttonsAdded;
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void hookInit(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (liquidbounce$buttonsAdded) {
+            return;
+        }
+        liquidbounce$buttonsAdded = true;
+
         if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
