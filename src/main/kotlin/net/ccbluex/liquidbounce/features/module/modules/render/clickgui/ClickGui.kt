@@ -45,6 +45,7 @@ import kotlin.math.sqrt
  * Main ClickGUI manager that handles windows, popups, and rendering.
  * Adapted from Wurst7's ClickGui class.
  */
+@Suppress("TooManyFunctions", "CognitiveComplexMethod", "PrintStackTrace", "LoopWithTooManyJumpStatements", "BracesOnIfStatements", "MaxLineLength")
 class ClickGui(private val windowsFile: Path) {
 
     private val mc: Minecraft get() = Minecraft.getInstance()

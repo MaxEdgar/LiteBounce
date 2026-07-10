@@ -87,7 +87,7 @@ object ClickGuiIcons {
 
         // Outline
         val outlineColor = Color4b(0x80, 0x10, 0x10, 0x80)
-        drawCheckOutline(context, xc2, yc3, xc3, yc5, xc4, yc1, xc5, yc2, xc3, yc6, xc1, yc4, outlineColor)
+        drawCheckOutline(context, outlineColor, xc2, yc3, xc3, yc5, xc4, yc1, xc5, yc2, xc3, yc6, xc1, yc4)
     }
 
     private fun drawCheckQuad(context: GuiGraphicsExtractor, x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, color: Color4b) {
@@ -98,9 +98,8 @@ object ClickGuiIcons {
         context.drawQuad(xMin, yMin, xMax, yMax, fillColor = color)
     }
 
-    private fun drawCheckOutline(context: GuiGraphicsExtractor, vararg points: Float, color: Color4b) {
+    private fun drawCheckOutline(context: GuiGraphicsExtractor, color: Color4b, vararg points: Float) {
         // Draw horizontal/vertical lines for the check outline - simplified
-        val argb = color.argb
         for (i in 0 until points.size - 2 step 2) {
             val x1 = points[i]; val y1 = points[i + 1]
             val x2 = points[i + 2]; val y2 = points[i + 3]

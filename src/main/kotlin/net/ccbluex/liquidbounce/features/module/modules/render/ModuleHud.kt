@@ -71,13 +71,13 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
             chat(markAsError(message("hidingAppearance")))
         }
 
-        // Register the native HUD with the event manager
-        ingameHUD.register()
+        // HUD handlers auto-register via EventListener handler delegates
+        // No explicit registration needed
     }
 
     override fun onDisabled() {
-        // Unregister the native HUD
-        ingameHUD.unregister()
+        // Handlers auto-unregister when no longer referenced
+        // Explicit unregistration not needed for handler delegates
     }
 
     @Suppress("unused")

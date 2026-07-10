@@ -75,8 +75,7 @@ object ModuleClickGui :
      * Whether the ClickGUI search bar is currently active.
      * Used by InventoryMove to determine if inputs should be blocked.
      */
-    @JvmField
-    val isInSearchBar = false
+    const val isInSearchBar = false
 
     init {
         tree(Snapping)

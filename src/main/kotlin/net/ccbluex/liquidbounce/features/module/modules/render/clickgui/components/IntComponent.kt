@@ -108,7 +108,7 @@ class IntComponent(private val setting: RangedValue<Int>) : Component() {
         val yk1 = y3 + 1.5f; val yk2 = y2 - 1.5f
         val knobColor = ClickGui.toIntColor(gui.getAcColor(), if (hSlider) 1f else 0.75f)
         ClickGui.fill2D(context, xk1, yk1, xk2, yk2, knobColor)
-        ClickGui.drawBorder2D(context, xk1, yk1, xk2, yk2, 0x80101010)
+        ClickGui.drawBorder2D(context, xk1, yk1, xk2, yk2, 0x80101010.toInt())
 
         val name = setting.name
         val valueStr = "${setting.get()}${setting.suffix}"
