@@ -46,9 +46,6 @@ object NativeClickGui {
     }
 
     @JvmStatic
-    fun getGui(): ClickGui = gui
-
-    @JvmStatic
     fun open() {
         Minecraft.getInstance().gui.setScreen(ClickGuiScreen(gui))
     }

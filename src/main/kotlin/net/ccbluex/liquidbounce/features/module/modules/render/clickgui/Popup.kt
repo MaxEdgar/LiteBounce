@@ -24,7 +24,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
  * Abstract popup for dropdown menus in the ClickGUI.
  * Adapted from Wurst7's Popup class.
  */
-abstract class Popup(protected val owner: Component) {
+abstract class Popup(owner: Component) {
+
+    private val popupOwner: Component = owner
 
     private var x: Int = 0
     private var y: Int = 0
@@ -37,7 +39,7 @@ abstract class Popup(protected val owner: Component) {
     abstract fun getDefaultWidth(): Int
     abstract fun getDefaultHeight(): Int
 
-    fun getOwner() = owner
+    fun getOwner() = popupOwner
     fun getX() = x; fun setX(x: Int) { this.x = x }
     fun getY() = y; fun setY(y: Int) { this.y = y }
     fun getWidth() = width; fun setWidth(width: Int) { this.width = width }

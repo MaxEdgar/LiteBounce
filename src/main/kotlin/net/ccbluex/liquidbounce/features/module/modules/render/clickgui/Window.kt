@@ -25,11 +25,13 @@ import net.minecraft.util.Mth
  * Represents a window in the ClickGUI, containing components.
  * Adapted from Wurst7's Window class.
  */
-open class Window(val title: String) {
+open class Window(title: String) {
 
     companion object {
         private val MC = Minecraft.getInstance()
     }
+
+    private val windowTitle: String = title
 
     private var x: Int = 0
     private var y: Int = 0
@@ -64,7 +66,7 @@ open class Window(val title: String) {
     private var draggingScrollbar: Boolean = false
     private var scrollbarDragOffsetY: Int = 0
 
-    fun getTitle() = title
+    fun getTitle() = windowTitle
 
     fun getX(): Int {
         if (!positionClampingEnabled) return x
@@ -107,7 +109,7 @@ open class Window(val title: String) {
         maxChildWidth += 4
 
         val font = MC.font
-        var titleBarWidth = font.width(title) + 4
+        var titleBarWidth = font.width(windowTitle) + 4
         if (minimizable) titleBarWidth += 11
         if (pinnable) titleBarWidth += 11
         if (closable) titleBarWidth += 11
