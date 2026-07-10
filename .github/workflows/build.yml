@@ -73,8 +73,10 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x gradlew
 
-      - name: Build project
-        run: ./gradlew clean build --stacktrace --no-daemon
+      - name: Build project (optimized for speed)
+        run: ./gradlew build --parallel --stacktrace
+        env:
+          GRADLE_MAX_WORKERS: 4
 
       - name: Copy JAR into repository folder
         run: |
