@@ -50,7 +50,6 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -259,7 +258,6 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)
-        ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
@@ -337,10 +335,6 @@ object LiquidBounce : EventListener {
 
                     ConfigSystem.store(ClientAccountManager)
                 }
-            }
-            launch {
-                // Load marketplace items
-                ConfigSystem.load(MarketplaceManager)
             }
         }
 

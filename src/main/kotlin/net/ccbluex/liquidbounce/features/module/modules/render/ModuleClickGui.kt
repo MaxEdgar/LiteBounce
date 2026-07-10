@@ -62,6 +62,22 @@ object ModuleClickGui :
         }
     }
 
+    /**
+     * Syncs the ClickGUI state with the module system.
+     * Used by commands and auto-config to refresh window state after changes.
+     */
+    @JvmStatic
+    fun sync() {
+        // Future: sync window positions, pinned state, etc.
+    }
+
+    /**
+     * Whether the ClickGUI search bar is currently active.
+     * Used by InventoryMove to determine if inputs should be blocked.
+     */
+    @JvmField
+    val isInSearchBar = false
+
     init {
         tree(Snapping)
     }

@@ -29,6 +29,8 @@ import io.netty.channel.kqueue.KQueueEventLoopGroup
 import io.netty.channel.kqueue.KQueueServerSocketChannel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.util.concurrent.Future
+import io.netty.util.concurrent.GenericFutureListener
 import net.minecraft.server.network.EventLoopGroupHolder
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -78,28 +80,32 @@ internal fun ServerBootstrap.setup(useNativeTransport: Boolean = true): Pair<Eve
  * Awaits a [ChannelFuture] as a suspend function.
  */
 internal suspend fun ChannelFuture.awaitSuspend(): ChannelFuture = suspendCoroutine { cont ->
-    this.addListener { future: ChannelFuture ->
+    this.addListener(GenericFutureListener { future: Future<in Void> ->
         if (future.isSuccess) {
-            cont.resume(future)
+            @Suppress("UNCHECKED_CAST")
+            cont.resume(future as ChannelFuture)
         } else if (future.cause() != null) {
             cont.resumeWithException(future.cause()!!)
         } else {
-            cont.resume(future)
+            @Suppress("UNCHECKED_CAST")
+            cont.resume(future as ChannelFuture)
         }
-    }
+    })
 }
 
 /**
  * Awaits a [ChannelFuture] as a suspend function (same as awaitSuspend).
  */
 internal suspend fun ChannelFuture.syncSuspend(): ChannelFuture = suspendCoroutine { cont ->
-    this.addListener { future: ChannelFuture ->
+    this.addListener(GenericFutureListener { future: Future<in Void> ->
         if (future.isSuccess) {
-            cont.resume(future)
+            @Suppress("UNCHECKED_CAST")
+            cont.resume(future as ChannelFuture)
         } else if (future.cause() != null) {
             cont.resumeWithException(future.cause()!!)
         } else {
-            cont.resume(future)
+            @Suppress("UNCHECKED_CAST")
+            cont.resume(future as ChannelFuture)
         }
-    }
+    })
 }

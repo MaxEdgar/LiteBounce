@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.hud
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGuiScreen
@@ -28,32 +27,9 @@ import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Manages the in-game HUD rendering.
- * Adapted from Wurst7's IngameHUD, uses LiquidBounce's OverlayRenderEvent.
+ * Uses LiquidBounce's OverlayRenderEvent via the EventListener handler delegate.
  */
 class IngameHUD : EventListener {
-
-    private var registered = false
-
-    /**
-     * Registers this HUD with the event manager.
-     * Must be called to activate HUD rendering.
-     */
-    fun register() {
-        if (!registered) {
-            EventManager.registerEventHandler(this)
-            registered = true
-        }
-    }
-
-    /**
-     * Unregisters this HUD from the event manager.
-     */
-    fun unregister() {
-        if (registered) {
-            EventManager.unregisterEventHandler(this)
-            registered = false
-        }
-    }
 
     @Suppress("unused")
     private val overlayRenderHandler = handler<OverlayRenderEvent> { event ->

@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.componen
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.util.Mth
 import org.lwjgl.glfw.GLFW
