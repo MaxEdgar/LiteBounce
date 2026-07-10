@@ -24,9 +24,9 @@ complexity:
     active: false
   TooManyFunctions:
     active: true
-    thresholdInClass: 60
-    thresholdInObject: 60
-    thresholdInInterface: 60
+    allowedFunctionsPerClass: 60
+    allowedFunctionsPerObject: 60
+    allowedFunctionsPerInterface: 60
 
 performance:
   active: true
