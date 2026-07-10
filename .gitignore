@@ -12,6 +12,9 @@ build/
 # But include the Gradle wrapper JAR (required for ./gradlew to work)
 !gradle/wrapper/gradle-wrapper.jar
 
+# Un-ignore CI build output JARs
+!build-output/*.jar
+
 # IDE files
 .idea/
 *.iml
