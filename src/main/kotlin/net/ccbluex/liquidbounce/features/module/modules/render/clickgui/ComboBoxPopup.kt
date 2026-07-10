@@ -29,9 +29,9 @@ import org.lwjgl.glfw.GLFW
  * Adapted from Wurst7's ComboBoxPopup.
  */
 class ComboBoxPopup(
-    owner: Component,
+    ownerComponent: Component,
     private val setting: ChoiceListValue<*>,
-) : Popup(owner) {
+) : Popup(ownerComponent) {
 
     private val gui: ClickGui get() = NativeClickGui.gui
     private val font: Font get() = Minecraft.getInstance().font
@@ -39,8 +39,8 @@ class ComboBoxPopup(
     init {
         setWidth(getDefaultWidth())
         setHeight(getDefaultHeight())
-        setX(owner.getWidth() - getWidth())
-        setY(owner.getHeight())
+        setX(ownerComponent.getWidth() - getWidth())
+        setY(ownerComponent.getHeight())
     }
 
     override fun handleMouseClick(mouseX: Int, mouseY: Int, mouseButton: Int) {

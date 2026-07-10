@@ -40,10 +40,12 @@ import java.io.File
  */
 object NativeClickGui {
 
-    val gui: ClickGui by lazy {
+    private val guiInstance: ClickGui by lazy {
         val windowsFile = File(ConfigSystem.rootFolder, "clickgui_windows.json").toPath()
         ClickGui(windowsFile).also { it.init() }
     }
+
+    val gui: ClickGui get() = guiInstance
 
     @JvmStatic
     fun open() {

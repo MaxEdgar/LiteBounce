@@ -40,6 +40,7 @@ exceptions:
   TooGenericExceptionCaught:
     active: false
 
+style:
   DestructuringDeclarationWithTooManyEntries:
     maxDestructuringEntries: 4
   MagicNumber:
@@ -59,7 +60,7 @@ exceptions:
   ForbiddenComment:
     active: false
   UnusedPrivateProperty:
-    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
+    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\\d*|repeatable'
   UnusedParameter:
     active: false
   ForbiddenMethodCall:
@@ -85,12 +86,12 @@ exceptions:
     active: true
     singleLine: 'never'
     multiLine: 'always'
-  PrintStackTrace:
-    active: false
   MayBeConstant:
+    active: false
+  PrintStackTrace:
     active: false
   TooManyFunctions:
     active: true
-    thresholdInClasses: 60
-    thresholdInObjects: 60
-    thresholdInInterfaces: 60
+    thresholdInClass: 60
+    thresholdInObject: 60
+    thresholdInInterface: 60
