@@ -137,6 +137,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             logger.warn("Intel GPU fence workaround: rotating ring buffer '${label}' after: ${e.message}")
             ring.rotate()
             currentOffset = 0
+            alignedOffset = 0
             ring.currentBuffer()
         }
         val sliceOffset = alignedOffset.toLong()
