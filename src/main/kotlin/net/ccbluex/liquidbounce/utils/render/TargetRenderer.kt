@@ -82,7 +82,7 @@ import kotlin.random.Random
 class TargetRenderer(
     owner: ToggleableValueGroup,
     val target: () -> Entity?,
-) : ToggleableValueGroup(owner, "TargetRendering", true) {
+) : ToggleableValueGroup(owner, "TargetRendering", false) {
 
     constructor(module: ToggleableValueGroup, targetTracker: TargetTracker) : this(module, targetTracker::target)
 
