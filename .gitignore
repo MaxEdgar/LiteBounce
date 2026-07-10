@@ -1,0 +1,46 @@
+# Wurst7 reference source - never commit
+Wurst7/
+
+# Gradle build artifacts
+build/
+.gradle/
+*.jar
+*.war
+*.zip
+*.tar.gz
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+*.sublime-*
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Generated resources
+src/main/resources/**/*.png
+src/main/resources/**/*.jpg
+src/generated/
+
+# Node / JS dependencies
+node_modules/
+package-lock.json
+yarn.lock
+.pnpm-store/
+
+# Misc
+*.log
+*.tmp
+.env
+.env.local
