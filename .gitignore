@@ -4,6 +4,7 @@ Wurst7/
 # Gradle build artifacts
 build/
 .gradle/
+*.jar
 *.war
 *.zip
 *.tar.gz
