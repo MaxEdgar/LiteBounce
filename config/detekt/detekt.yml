@@ -88,10 +88,3 @@ style:
     multiLine: 'always'
   MayBeConstant:
     active: false
-  PrintStackTrace:
-    active: false
-  TooManyFunctions:
-    active: true
-    thresholdInClass: 60
-    thresholdInObject: 60
-    thresholdInInterface: 60
