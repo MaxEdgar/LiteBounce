@@ -33,17 +33,9 @@ class FpsChangeEvent(val fps: Int) : Event()
 @Suppress("unused")
 class FpsLimitEvent(var fps: Int) : Event()
 
-@Tag("clientPlayerData")
-@Suppress("unused")
-
-
 @Tag("clientPlayerEffect")
 @Suppress("unused")
 class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event()
-
-@Tag("clientPlayerInventory")
-@Suppress("unused")
-
 
 sealed class TitleEvent : CancellableEvent() {
     sealed class TextContent : TitleEvent() {

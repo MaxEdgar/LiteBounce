@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGuiIcons
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.Component
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ComboBoxPopup
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent

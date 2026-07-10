@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.compone
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.Component
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 
@@ -41,7 +42,7 @@ class ToggleableGroupComponent(private val group: ToggleableValueGroup) : Compon
 
     override fun handleMouseClick(mouseX: Double, mouseY: Double, mouseButton: Int, context: MouseButtonEvent) {
         if (mouseButton == 0) {
-            group.setEnabled(group.enabled)
+            group.enabled = !group.enabled
         }
     }
 

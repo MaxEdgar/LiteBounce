@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.compone
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.Component
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
@@ -69,13 +70,13 @@ class ColorComponent(private val colorSetting: Value<Color4b>) : Component() {
         context.guiRenderState.up()
 
         // text
-        val hexStr = String.format("#%06X", 0xFFFFFF and colorSetting.get().rgba)
+        val hexStr = String.format("#%06X", 0xFFFFFF and colorSetting.get().argb)
         context.text(font, colorSetting.name, x3 + 2, y1 + 2, gui.getTxtColor(), false)
         context.text(font, hexStr, x2 - font.width(hexStr) - 2, y1 + 2, gui.getTxtColor(), false)
     }
 
     override fun getDefaultWidth(): Int {
-        val hexStr = String.format("#%06X", 0xFFFFFF and colorSetting.get().rgba)
+        val hexStr = String.format("#%06X", 0xFFFFFF and colorSetting.get().argb)
         return boxSize + font.width(colorSetting.name) + font.width(hexStr) + 6
     }
 

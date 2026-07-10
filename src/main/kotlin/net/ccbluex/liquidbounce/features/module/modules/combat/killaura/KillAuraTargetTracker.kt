@@ -53,21 +53,4 @@ object KillAuraTargetTracker : TargetTracker() {
 
         return !entity.wouldBlockHit
     }
-
-    /**
-     * Returns a stable, sorted list of valid targets.
-     * Uses defensive copying to prevent ConcurrentModificationException
-     * when entities are added/removed during iteration.
-     *
-     * @return defensive copy of valid target entities, sorted by distance
-     */
-    override fun targets(): List<LivingEntity> {
-        // Create a defensive copy to prevent CME during concurrent modification
-        val entities = world.getEntities()
-            .ofType<LivingEntity>()
-            .filter { validate(it) }
-            .sortedBy { it.distanceToSqr(player) }
-
-        return entities
-    }
 }

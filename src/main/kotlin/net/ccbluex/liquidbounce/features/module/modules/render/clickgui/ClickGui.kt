@@ -29,12 +29,15 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.util.Mth
 import org.lwjgl.glfw.GLFW
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
+import kotlin.math.atan2
+import kotlin.math.sqrt
 
 /**
  * Main ClickGUI manager that handles windows, popups, and rendering.
@@ -133,7 +136,6 @@ class ClickGui(private val windowsFile: Path) {
         }
         try {
             BufferedWriter(Files.newBufferedWriter(windowsFile)).use { writer ->
-                // Write as pretty JSON
                 val gson = GsonBuilder().setPrettyPrinting().create()
                 writer.write(gson.toJson(json))
             }
@@ -364,6 +366,96 @@ class ClickGui(private val windowsFile: Path) {
         }
     }
 
+    private fun renderWindow(context: GuiGraphicsExtractor, window: Window, mouseX: Int, mouseY: Int, partialTicks: Float) {
+        if (window.isInvisible()) return
+
+        val x1 = window.getX(); val y1 = window.getY()
+        val x2 = x1 + window.getWidth(); val y2 = y1 + window.getHeight()
+        val hovering = mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2
+
+        window.validate()
+
+        // Window background
+        val bgColor = toIntColor(bgColor, opacity)
+        context.fill(x1, y1, x2, y2, bgColor)
+
+        // Title bar
+        val acColorInt = toIntColor(acColor, opacity * 0.8f)
+        context.fill(x1, y1, x2, y1 + 13, acColorInt)
+
+        // Window border
+        drawBorder2D(context, x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), toIntColor(acColor, 0.5f))
+
+        context.guiRenderState.up()
+
+        // Title text
+        val font = mc.font
+        val txtColorInt = txtColor
+        context.text(font, window.getTitle(), x1 + 2, y1 + 2, txtColorInt, false)
+
+        // Minimize/pin/close buttons
+        var bx = x2 - 1
+
+        if (window.isClosable()) {
+            bx -= 11
+            val btnHover = hovering && mouseX >= bx && mouseX < bx + 9 && mouseY >= y1 + 2 && mouseY < y1 + 11
+            ClickGuiIcons.drawCross(context, bx.toFloat(), (y1 + 1).toFloat(), (bx + 9).toFloat(), (y1 + 11).toFloat(), btnHover)
+        }
+
+        if (window.isPinnable()) {
+            bx -= 11
+            val btnHover = hovering && mouseX >= bx && mouseX < bx + 9 && mouseY >= y1 + 2 && mouseY < y1 + 11
+            ClickGuiIcons.drawPin(context, bx.toFloat(), (y1 + 1).toFloat(), (bx + 9).toFloat(), (y1 + 11).toFloat(), btnHover, window.isPinned())
+        }
+
+        if (window.isMinimizable()) {
+            bx -= 11
+            val btnHover = hovering && mouseX >= bx && mouseX < bx + 9 && mouseY >= y1 + 2 && mouseY < y1 + 11
+            ClickGuiIcons.drawMinimizeArrow(context, bx.toFloat(), (y1 + 1).toFloat(), (bx + 9).toFloat(), (y1 + 11).toFloat(), btnHover, window.isMinimized())
+        }
+
+        // Render children if not minimized
+        if (!window.isMinimized()) {
+            val scrollEnabled = window.isScrollingEnabled()
+            val scrollOffset = window.getScrollOffset()
+
+            // Draw children
+            for (i in 0 until window.countChildren()) {
+                val child = window.getChild(i)
+
+                val cx1 = x1 + child.getX()
+                val cy1 = y1 + 13 + child.getY() + (if (scrollEnabled) scrollOffset else 0)
+
+                if (cy1 + child.getHeight() < y1 + 13 || cy1 > y2) continue // Clipped
+
+                context.pose().pushMatrix()
+                context.pose().translate(cx1.toFloat(), cy1.toFloat())
+
+                child.render(context,
+                    if (hovering) mouseX - cx1 else Int.MIN_VALUE,
+                    if (hovering) mouseY - cy1 else Int.MIN_VALUE,
+                    partialTicks)
+
+                context.pose().popMatrix()
+            }
+
+            // Draw scrollbar
+            if (scrollEnabled) {
+                val outerHeight = window.getHeight() - 13
+                val innerHeight = window.getInnerHeight()
+                val maxScrollbarHeight = outerHeight - 2
+                val scrollbarHeight = (maxScrollbarHeight * outerHeight / innerHeight)
+                    .coerceAtLeast(1)
+
+                val scrollbarY = (outerHeight * (-scrollOffset / innerHeight.toDouble()) + 1).toInt()
+                    .coerceAtMost(outerHeight - scrollbarHeight - 1)
+
+                val sx = x2 - 2
+                context.fill(sx, y1 + 13 + scrollbarY, sx + 1, y1 + 13 + scrollbarY + scrollbarHeight, 0xFF888888.toInt())
+            }
+        }
+    }
+
     fun render(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTicks: Float) {
         context.pose().pushMatrix()
         tooltip = ""
@@ -502,10 +594,10 @@ class ClickGui(private val windowsFile: Path) {
 
             context.pose().pushMatrix()
             context.pose().scale(1f / s)
-            context.drawHorizontalLine(x, x + w - 1, y, color)
-            context.drawHorizontalLine(x, x + w - 1, y + h - 1, color)
-            context.drawVerticalLine(x, y + 1, y + h - 2, color)
-            context.drawVerticalLine(x + w - 1, y + 1, y + h - 2, color)
+            context.drawHorizontalLine(x.toFloat(), (x + w - 1).toFloat(), y.toFloat(), 1f, net.ccbluex.liquidbounce.render.engine.type.Color4b(color))
+            context.drawHorizontalLine(x.toFloat(), (x + w - 1).toFloat(), (y + h - 1).toFloat(), 1f, net.ccbluex.liquidbounce.render.engine.type.Color4b(color))
+            context.drawVerticalLine(x.toFloat(), (y + 1).toFloat(), (y + h - 2).toFloat(), 1f, net.ccbluex.liquidbounce.render.engine.type.Color4b(color))
+            context.drawVerticalLine((x + w - 1).toFloat(), (y + 1).toFloat(), (y + h - 2).toFloat(), 1f, net.ccbluex.liquidbounce.render.engine.type.Color4b(color))
             context.pose().popMatrix()
         }
 
@@ -513,14 +605,12 @@ class ClickGui(private val windowsFile: Path) {
             val s = scale
             val x = x1 * s; val y = y1 * s
             val w = (x2 - x1) * s; val h = (y2 - y1) * s
-            val angle = kotlin.math.atan2(h.toDouble(), w.toDouble()).toFloat()
-            val length = kotlin.math.sqrt((w * w + h * h).toDouble()).toInt()
+            val length = sqrt((w * w + h * h).toDouble()).toInt()
 
             context.pose().pushMatrix()
             context.pose().scale(1f / s)
             context.pose().translate(x, y)
-            context.pose().rotate(angle, 0f, 0f, 1f)
-            context.drawHorizontalLine(0, length - 1, 0, color)
+            context.drawHorizontalLine(0f, (length - 1).toFloat(), 0f, 1f, net.ccbluex.liquidbounce.render.engine.type.Color4b(color))
             context.pose().popMatrix()
         }
 

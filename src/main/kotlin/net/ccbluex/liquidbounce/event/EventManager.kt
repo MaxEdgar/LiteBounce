@@ -53,7 +53,6 @@ import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
-import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -234,7 +233,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     BlockCountChangeEvent::class.java,
     BedStateChangeEvent::class.java,
     GameModeChangeEvent::class.java,
-    ComponentsUpdateEvent::class.java,
     ResourceReloadEvent::class.java,
     ProxyCheckResultEvent::class.java,
     ScaleFactorChangeEvent::class.java,

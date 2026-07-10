@@ -94,6 +94,8 @@ object ClientRenderPipelines {
     }
 
 
+    object GUI {
+
         private fun RenderPipeline.Builder.guiPosColorSnippet(mode: PrimitiveTopology) {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)

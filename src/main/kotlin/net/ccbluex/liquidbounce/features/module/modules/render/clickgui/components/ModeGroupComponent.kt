@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.compone
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.Component
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 
@@ -42,7 +43,10 @@ class ModeGroupComponent(private val group: ModeValueGroup<*>) : Component() {
     override fun handleMouseClick(mouseX: Double, mouseY: Double, mouseButton: Int, context: MouseButtonEvent) {
         // Cycle through modes on click
         if (mouseButton == 0) {
-            group.cycle()
+            val modes = group.modes
+            val currentIndex = modes.indexOf(group.activeMode)
+            val nextIndex = (currentIndex + 1) % modes.size
+            group.setByString(modes[nextIndex].tag)
         }
     }
 
@@ -63,11 +67,11 @@ class ModeGroupComponent(private val group: ModeValueGroup<*>) : Component() {
 
         context.guiRenderState.up()
 
-        val name = "${group.name}: ${group.activeModeName}"
+        val name = "${group.name}: ${group.activeMode.name}"
         context.text(font, name, x1 + 2, y1 + 2, gui.getTxtColor(), false)
     }
 
-    override fun getDefaultWidth() = font.width("${group.name}: ${group.activeModeName}") + 4
+    override fun getDefaultWidth() = font.width("${group.name}: ${group.activeMode.name}") + 4
 
     override fun getDefaultHeight() = textHeight
 }

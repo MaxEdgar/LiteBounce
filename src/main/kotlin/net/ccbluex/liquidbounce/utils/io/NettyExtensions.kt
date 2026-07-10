@@ -19,8 +19,20 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import io.netty.bootstrap.AbstractBootstrap
+import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
+import io.netty.channel.ChannelFuture
+import io.netty.channel.EventLoopGroup
+import io.netty.channel.epoll.EpollEventLoopGroup
+import io.netty.channel.epoll.EpollServerSocketChannel
+import io.netty.channel.kqueue.KQueueEventLoopGroup
+import io.netty.channel.kqueue.KQueueServerSocketChannel
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.nio.NioServerSocketChannel
 import net.minecraft.server.network.EventLoopGroupHolder
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
@@ -34,3 +46,60 @@ internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.c
             .group(networkingBackend.eventLoopGroup())
 }
 
+/**
+ * Returns a pair of (bossGroup, workerGroup) for server bootstraps.
+ */
+@JvmOverloads
+internal fun ServerBootstrap.setup(useNativeTransport: Boolean = true): Pair<EventLoopGroup, EventLoopGroup> {
+    val bossGroup = if (useNativeTransport) {
+        EpollEventLoopGroup(1)
+    } else {
+        NioEventLoopGroup(1)
+    }
+
+    val workerGroup = if (useNativeTransport) {
+        EpollEventLoopGroup()
+    } else {
+        NioEventLoopGroup()
+    }
+
+    val channelClass = when {
+        useNativeTransport -> EpollServerSocketChannel::class.java
+        else -> NioServerSocketChannel::class.java
+    }
+
+    group(bossGroup, workerGroup)
+    channel(channelClass)
+
+    return Pair(bossGroup, workerGroup)
+}
+
+/**
+ * Awaits a [ChannelFuture] as a suspend function.
+ */
+internal suspend fun ChannelFuture.awaitSuspend(): ChannelFuture = suspendCoroutine { cont ->
+    this.addListener { future: ChannelFuture ->
+        if (future.isSuccess) {
+            cont.resume(future)
+        } else if (future.cause() != null) {
+            cont.resumeWithException(future.cause()!!)
+        } else {
+            cont.resume(future)
+        }
+    }
+}
+
+/**
+ * Awaits a [ChannelFuture] as a suspend function (same as awaitSuspend).
+ */
+internal suspend fun ChannelFuture.syncSuspend(): ChannelFuture = suspendCoroutine { cont ->
+    this.addListener { future: ChannelFuture ->
+        if (future.isSuccess) {
+            cont.resume(future)
+        } else if (future.cause() != null) {
+            cont.resumeWithException(future.cause()!!)
+        } else {
+            cont.resume(future)
+        }
+    }
+}

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.Renderable
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
@@ -48,9 +47,7 @@ class ClickGuiScreen(private val gui: ClickGui) : Screen(Component.literal("")) 
     }
 
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTicks: Float) {
-        for (drawable in renderables) {
-            drawable.extractRenderState(context, mouseX, mouseY, partialTicks)
-        }
+        super.extractRenderState(context, mouseX, mouseY, partialTicks)
         gui.render(context, mouseX, mouseY, partialTicks)
     }
 

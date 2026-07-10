@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.compone
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.Component
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import org.lwjgl.glfw.GLFW

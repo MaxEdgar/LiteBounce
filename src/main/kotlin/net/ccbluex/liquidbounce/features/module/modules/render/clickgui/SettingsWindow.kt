@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.client.Minecraft
 import net.minecraft.util.Mth
 
 /**
