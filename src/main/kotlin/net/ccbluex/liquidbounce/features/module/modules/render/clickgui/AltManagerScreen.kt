@@ -50,7 +50,6 @@ class AltManagerScreen : Screen(Component.literal("")) {
     private val inputs = mutableMapOf<InputField, String>()
     private var deleteConfirmId: Int? = null
 
-    /** Y-offset where the bottom input section starts (computed during render) */
     private var inputSectionY = 0
 
     override fun isPauseScreen() = false
@@ -94,7 +93,6 @@ class AltManagerScreen : Screen(Component.literal("")) {
         val listStartY = y
         val inputAreaH = 115
         val listEndY = sh - inputAreaH
-        val listH = listEndY - listStartY
 
         var currentY = listStartY + scrollOffset
         val accounts = AccountManager.accounts.toList()
@@ -118,7 +116,6 @@ class AltManagerScreen : Screen(Component.literal("")) {
                 val service = AccountService.getService(account)
                 val isLoggedIn = user.name.equals(username, ignoreCase = true)
 
-                // Row background
                 val bgColor = when {
                     isLoggedIn -> 0xFF2A3A2A.toInt()
                     hovering -> 0xFF222233.toInt()
@@ -128,14 +125,11 @@ class AltManagerScreen : Screen(Component.literal("")) {
 
                 var cx = listX + 4
 
-                // Favorite star
                 val starText = if (isFavorite) "[*]" else "[ ]"
-                val starHover = mouseX in cx..<cx + 14 && mouseY in itemY..<itemY + itemH
                 context.text(font, starText, cx, itemY + 3,
-                    if (starHover) 0xFFFFDD00.toInt() else if (isFavorite) 0xFFFFAA00.toInt() else 0xFF555555.toInt(), false)
+                    if (isFavorite) 0xFFFFAA00.toInt() else 0xFF555555.toInt(), false)
                 cx += 16
 
-                // Account type badge (first 3 chars of type)
                 val typeColor = when (service) {
                     AccountService.MICROSOFT -> 0xFF44AA44.toInt()
                     AccountService.SESSION -> 0xFF44AAAA.toInt()
@@ -145,21 +139,17 @@ class AltManagerScreen : Screen(Component.literal("")) {
                 context.text(font, service.tag.take(3), cx, itemY + 3, typeColor, false)
                 cx += 16
 
-                // Username
                 context.text(font, username, cx, itemY + 3,
                     if (isLoggedIn) 0xFF66FF66.toInt() else 0xFFF0F0F0.toInt(), false)
 
-                // Right side: delete and login buttons
                 val delW = font.width("Del") + 4
                 val delX = listX + listW - delW - 2
-                val delHover = mouseX in delX..<delX + delW && mouseY in itemY..<itemY + itemH
                 context.text(font, if (deleteConfirmId == index) "Confirm" else "Del",
-                    delX, itemY + 3, if (delHover) 0xFFFF5555.toInt() else 0xFF888888.toInt(), false)
+                    delX, itemY + 3, 0xFF888888.toInt(), false)
 
                 val logW = font.width("Login") + 4
                 val logX = delX - logW - 4
-                val logHover = mouseX in logX..<logX + logW && mouseY in itemY..<itemY + itemH
-                val logColor = if (isLoggedIn) 0xFF555555.toInt() else if (logHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt()
+                val logColor = if (isLoggedIn) 0xFF555555.toInt() else 0xFF888888.toInt()
                 context.text(font, "Login", logX, itemY + 3, logColor, false)
             }
             currentY += itemH + 1
@@ -167,6 +157,7 @@ class AltManagerScreen : Screen(Component.literal("")) {
 
         // Scrollbar
         val contentH = accounts.size * (itemH + 1)
+        val listH = listEndY - listStartY
         val maxScroll = (contentH - listH).coerceAtLeast(0)
         scrollOffset = scrollOffset.coerceIn(-maxScroll, 0)
 
@@ -176,9 +167,7 @@ class AltManagerScreen : Screen(Component.literal("")) {
             val thumbH = (listH.toFloat() / contentH.toFloat() * listH).toInt().coerceAtLeast(12)
             val thumbY = listStartY + ((-scrollOffset).toFloat() / maxScroll * (listH - thumbH)).toInt()
             context.fill(scrollBarX, listStartY, scrollBarX + scrollBarW, listEndY, 0xFF1A1A33.toInt())
-            val thumbHover = mouseX in scrollBarX..<scrollBarX + scrollBarW && mouseY in thumbY..<thumbY + thumbH
-            context.fill(scrollBarX, thumbY, scrollBarX + scrollBarW, thumbY + thumbH,
-                if (thumbHover) 0xFF5555AA.toInt() else 0xFF333377.toInt())
+            context.fill(scrollBarX, thumbY, scrollBarX + scrollBarW, thumbY + thumbH, 0xFF333377.toInt())
         }
 
         // Bottom input section
@@ -188,89 +177,57 @@ class AltManagerScreen : Screen(Component.literal("")) {
         context.fill(8, y - 2, sw - 8, y - 1, 0xFF333344.toInt())
         y += 4
 
-        // Cracked
         context.text(font, "Cracked", 8, y, 0xFFAAAA44.toInt(), false)
         y += 10
         val crackedVal = inputs[InputField.CRACKED_USERNAME] ?: ""
         val showCrackedPlaceholder = editingInput != InputField.CRACKED_USERNAME && crackedVal.isEmpty()
-        val displayCracked = if (showCrackedPlaceholder) "Username..." else crackedVal
         val crackedInputY = y
-        val crackedFocused = editingInput == InputField.CRACKED_USERNAME
         context.fill(8, crackedInputY, 8 + 130, crackedInputY + 12,
-            if (crackedFocused) 0xFF333355.toInt() else 0xFF222233.toInt())
-        context.text(font, displayCracked, 10, crackedInputY + 2,
+            if (editingInput == InputField.CRACKED_USERNAME) 0xFF333355.toInt() else 0xFF222233.toInt())
+        context.text(font, if (showCrackedPlaceholder) "Username..." else crackedVal, 10, crackedInputY + 2,
             if (showCrackedPlaceholder) 0xFF555555.toInt() else 0xFFF0F0F0.toInt(), false)
 
-        // Add cracked button
         val addCrackedX = 8 + 130 + 4
-        val addCrackedHover = mouseX in addCrackedX..<addCrackedX + 28 && mouseY in crackedInputY..<crackedInputY + 12
-        context.fill(addCrackedX, crackedInputY, addCrackedX + 28, crackedInputY + 12,
-            if (addCrackedHover) 0xFF444466.toInt() else 0xFF333344.toInt())
-        context.text(font, "Add", addCrackedX + 4, crackedInputY + 2,
-            if (addCrackedHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
+        context.fill(addCrackedX, crackedInputY, addCrackedX + 28, crackedInputY + 12, 0xFF333344.toInt())
+        context.text(font, "Add", addCrackedX + 4, crackedInputY + 2, 0xFFAAAAAA.toInt(), false)
 
         y += 16
-
-        // Session Token
         context.text(font, "Session Token", 8, y, 0xFF44AAAA.toInt(), false)
         y += 10
         val sessionVal = inputs[InputField.SESSION_TOKEN] ?: ""
         val showSessionPlaceholder = editingInput != InputField.SESSION_TOKEN && sessionVal.isEmpty()
-        val displaySession = if (showSessionPlaceholder) "Paste token here..." else sessionVal
         val sessionInputY = y
-        val sessionFocused = editingInput == InputField.SESSION_TOKEN
         context.fill(8, sessionInputY, 8 + 240, sessionInputY + 12,
-            if (sessionFocused) 0xFF333355.toInt() else 0xFF222233.toInt())
-        context.text(font, displaySession, 10, sessionInputY + 2,
+            if (editingInput == InputField.SESSION_TOKEN) 0xFF333355.toInt() else 0xFF222233.toInt())
+        context.text(font, if (showSessionPlaceholder) "Paste token here..." else sessionVal, 10, sessionInputY + 2,
             if (showSessionPlaceholder) 0xFF555555.toInt() else 0xFFF0F0F0.toInt(), false)
 
-        // Add session button
         val addSessionX = 8 + 240 + 4
-        val addSessionHover = mouseX in addSessionX..<addSessionX + 28 && mouseY in sessionInputY..<sessionInputY + 12
-        context.fill(addSessionX, sessionInputY, addSessionX + 28, sessionInputY + 12,
-            if (addSessionHover) 0xFF444466.toInt() else 0xFF333344.toInt())
-        context.text(font, "Add", addSessionX + 4, sessionInputY + 2,
-            if (addSessionHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
+        context.fill(addSessionX, sessionInputY, addSessionX + 28, sessionInputY + 12, 0xFF333344.toInt())
+        context.text(font, "Add", addSessionX + 4, sessionInputY + 2, 0xFFAAAAAA.toInt(), false)
 
         y += 16
+        context.fill(8, y, 8 + 80, y + 12, 0xFF333344.toInt())
+        context.text(font, "Microsoft", 12, y + 2, 0xFFAAAAAA.toInt(), false)
 
-        // Microsoft button
-        val msHover = mouseX in 8..<8 + 80 && mouseY in y..<y + 12
-        context.fill(8, y, 8 + 80, y + 12, if (msHover) 0xFF444466.toInt() else 0xFF333344.toInt())
-        context.text(font, "Microsoft", 12, y + 2,
-            if (msHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
-
-        // TheAltening button
         val altX = 8 + 88
-        val altHover = mouseX in altX..<altX + 80 && mouseY in y..<y + 12
-        context.fill(altX, y, altX + 80, y + 12, if (altHover) 0xFF444466.toInt() else 0xFF333344.toInt())
-        context.text(font, "TheAltening", altX + 4, y + 2,
-            if (altHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
+        context.fill(altX, y, altX + 80, y + 12, 0xFF333344.toInt())
+        context.text(font, "TheAltening", altX + 4, y + 2, 0xFFAAAAAA.toInt(), false)
 
-        // Altening token input
         val altToken = inputs[InputField.ALTENING_TOKEN] ?: ""
         if (editingInput == InputField.ALTENING_TOKEN || altToken.isNotEmpty()) {
             val altTokenX = altX + 86
-            context.fill(altTokenX, y, altTokenX + 180, y + 12,
-                if (editingInput == InputField.ALTENING_TOKEN) 0xFF333355.toInt() else 0xFF222233.toInt())
-            val showAltPlaceholder = editingInput != InputField.ALTENING_TOKEN && altToken.isEmpty()
-            val displayAlt = if (showAltPlaceholder) "API token..." else altToken
-            context.text(font, displayAlt, altTokenX + 2, y + 2, 0xFFF0F0F0.toInt(), false)
+            context.fill(altTokenX, y, altTokenX + 180, y + 12, 0xFF222233.toInt())
+            context.text(font, altToken, altTokenX + 2, y + 2, 0xFFF0F0F0.toInt(), false)
 
             val genX = altTokenX + 186
-            val genHover = mouseX in genX..<genX + 46 && mouseY in y..<y + 12
-            context.fill(genX, y, genX + 46, y + 12,
-                if (genHover) 0xFF444466.toInt() else 0xFF333344.toInt())
-            context.text(font, "Generate", genX + 2, y + 2,
-                if (genHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
+            context.fill(genX, y, genX + 46, y + 12, 0xFF333344.toInt())
+            context.text(font, "Generate", genX + 2, y + 2, 0xFFAAAAAA.toInt(), false)
         }
 
-        // Status message
         val status = statusMessage
         if (status != null && statusTimer > 0) {
-            val statusColor = 0xFF66FF66.toInt()
-            context.text(font, status, sw / 2 - font.width(status) / 2,
-                sh - 16, statusColor, false)
+            context.text(font, status, sw / 2 - font.width(status) / 2, sh - 16, 0xFF66FF66.toInt(), false)
             statusTimer--
         } else {
             statusMessage = null
@@ -286,7 +243,6 @@ class AltManagerScreen : Screen(Component.literal("")) {
         }
     }
 
-    // Handle mouse click - extracted helper to reduce returns
     private fun checkRestoreClick(mx: Int, my: Int): Boolean {
         val font = mc.font
         val restoreX = width - font.width("Restore Initial") - 8
@@ -300,53 +256,68 @@ class AltManagerScreen : Screen(Component.literal("")) {
         return false
     }
 
-    private fun checkAccountListClick(mx: Int, my: Int): Boolean {
+    private fun handleAccountAction(index: Int, account: Any, mx: Int, listX: Int, listW: Int): Boolean {
         val font = mc.font
+        if (mx < listX + 20) {
+            if (safeIsFavorite(account)) {
+                AccountManager.unfavoriteAccount(index)
+            } else {
+                AccountManager.favoriteAccount(index)
+            }
+            return true
+        }
+        val delW = font.width("Del") + 4
+        val delX = listX + listW - delW - 2
+        val logW = font.width("Login") + 4
+        val logX = delX - logW - 4
+        if (mx >= logX && mx < logX + logW) {
+            AccountManager.loginAccount(index)
+            statusMessage = "Logging in..."
+            statusTimer = 100
+            return true
+        }
+        if (mx >= delX && mx < delX + delW) {
+            if (deleteConfirmId == index) {
+                AccountManager.removeAccount(index)
+                deleteConfirmId = null
+                statusMessage = "Removed account"
+                statusTimer = 100
+            } else {
+                deleteConfirmId = index
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun checkAccountListClick(mx: Int, my: Int): Boolean {
         val accounts = AccountManager.accounts.toList()
         val listW = width / 2 + 80
         val listX = width / 2 - listW / 2
-        val listStartY = 8 + font.lineHeight + 4 + 6 + 6
+        val listStartY = 8 + mc.font.lineHeight + 4 + 6 + 6
 
         for ((index, account) in accounts.withIndex()) {
             val itemY = listStartY + scrollOffset + index * 17
             if (my in itemY..<itemY + 16 && mx in listX..<listX + listW) {
-                // Star (favorite) - first 20px
-                if (mx < listX + 20) {
-                    if (safeIsFavorite(account)) {
-                        AccountManager.unfavoriteAccount(index)
-                    } else {
-                        AccountManager.favoriteAccount(index)
-                    }
-                    return true
-                }
-
-                // Login / Delete buttons (right side)
-                val delW = font.width("Del") + 4
-                val delX = listX + listW - delW - 2
-                val logW = font.width("Login") + 4
-                val logX = delX - logW - 4
-
-                if (mx >= logX && mx < logX + logW) {
-                    AccountManager.loginAccount(index)
-                    statusMessage = "Logging in as ${account.profile?.username ?: "???"}"
-                    statusTimer = 100
-                    return true
-                }
-
-                if (mx >= delX && mx < delX + delW) {
-                    if (deleteConfirmId == index) {
-                        AccountManager.removeAccount(index)
-                        deleteConfirmId = null
-                        statusMessage = "Removed account"
-                        statusTimer = 100
-                    } else {
-                        deleteConfirmId = index
-                    }
-                    return true
-                }
-
                 deleteConfirmId = null
+                return handleAccountAction(index, account, mx, listX, listW)
             }
+        }
+        return false
+    }
+
+    private fun handleAlteningTokenClick(mx: Int): Boolean {
+        val altToken = inputs[InputField.ALTENING_TOKEN] ?: ""
+        if (editingInput != InputField.ALTENING_TOKEN && altToken.isEmpty()) return false
+        val altX = 8 + 88
+        val altTokenX = altX + 86
+        if (mx in altTokenX..<altTokenX + 180) {
+            editingInput = InputField.ALTENING_TOKEN
+            return true
+        }
+        if (mx in altTokenX + 186..<altTokenX + 186 + 46) {
+            generateAltening()
+            return true
         }
         return false
     }
@@ -354,57 +325,44 @@ class AltManagerScreen : Screen(Component.literal("")) {
     private fun checkInputSectionClick(mx: Int, my: Int): Boolean {
         if (my < inputSectionY) return false
         val yOff = my - inputSectionY
+        var handled = false
 
-        // Cracked row
         if (yOff in 14..<14 + 12) {
+            handled = true
             if (mx in 8..<8 + 130) {
                 editingInput = InputField.CRACKED_USERNAME
-                return true
-            }
-            if (mx in 8 + 130 + 4..<8 + 130 + 4 + 28) {
+            } else if (mx in 142..<170) {
                 addCrackedAccount()
-                return true
+            } else {
+                handled = false
             }
         }
 
-        // Session row
-        if (yOff in 40..<40 + 12) {
+        if (!handled && yOff in 40..<40 + 12) {
+            handled = true
             if (mx in 8..<8 + 240) {
                 editingInput = InputField.SESSION_TOKEN
-                return true
-            }
-            if (mx in 8 + 240 + 4..<8 + 240 + 4 + 28) {
+            } else if (mx in 252..<280) {
                 addSessionAccount()
-                return true
+            } else {
+                handled = false
             }
         }
 
-        // Microsoft / Altening row
-        if (yOff in 66..<66 + 12) {
+        if (!handled && yOff in 66..<66 + 12) {
+            handled = true
             if (mx in 8..<8 + 80) {
                 addMicrosoftAccount()
-                return true
-            }
-            val altX = 8 + 88
-            if (mx in altX..<altX + 80) {
+            } else if (mx in 96..<176) {
                 editingInput = InputField.ALTENING_TOKEN
-                return true
-            }
-            val altToken = inputs[InputField.ALTENING_TOKEN] ?: ""
-            if (editingInput == InputField.ALTENING_TOKEN || altToken.isNotEmpty()) {
-                val altTokenX = altX + 86
-                if (mx in altTokenX..<altTokenX + 180) {
-                    editingInput = InputField.ALTENING_TOKEN
-                    return true
-                }
-                if (mx in altTokenX + 186..<altTokenX + 186 + 46) {
-                    generateAltening()
-                    return true
-                }
+            } else if (handleAlteningTokenClick(mx)) {
+                // handled by helper
+            } else {
+                handled = false
             }
         }
 
-        return false
+        return handled
     }
 
     override fun mouseClicked(context: MouseButtonEvent, doubleClick: Boolean): Boolean {
@@ -414,13 +372,17 @@ class AltManagerScreen : Screen(Component.literal("")) {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return super.mouseClicked(context, doubleClick)
         }
-
-        if (checkRestoreClick(mx, my)) return true
-        if (checkAccountListClick(mx, my)) return true
-        if (checkInputSectionClick(mx, my)) return true
-
-        editingInput = null
-        return super.mouseClicked(context, doubleClick)
+        var handled = checkRestoreClick(mx, my)
+        if (!handled) {
+            handled = checkAccountListClick(mx, my)
+        }
+        if (!handled) {
+            handled = checkInputSectionClick(mx, my)
+        }
+        if (!handled) {
+            editingInput = null
+        }
+        return handled || super.mouseClicked(context, doubleClick)
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {

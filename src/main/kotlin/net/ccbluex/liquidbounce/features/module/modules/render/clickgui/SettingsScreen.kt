@@ -467,17 +467,17 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             return super.mouseClicked(context, doubleClick)
         }
 
-        if (checkBackClick(mx, my)) return true
+        var handled = checkBackClick(mx, my)
+        if (!handled) {
+            val listX = width / 4
+            val listW = width / 2
+            val controlAreaX = listX + listW * 3 / 5 + 4
+            val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
+            handled = checkSettingRowClick(mx, my, controlAreaX, controlWidth) ||
+                checkScrollbarClick(mx, my)
+        }
 
-        val listX = width / 4
-        val listW = width / 2
-        val controlAreaX = listX + listW * 3 / 5 + 4
-        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
-
-        if (checkSettingRowClick(mx, my, controlAreaX, controlWidth)) return true
-        if (checkScrollbarClick(mx, my)) return true
-
-        return super.mouseClicked(context, doubleClick)
+        return handled || super.mouseClicked(context, doubleClick)
     }
 
     override fun mouseReleased(context: MouseButtonEvent): Boolean {
@@ -609,7 +609,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
     }
 
-    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+    override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {
         if (scrollBarGrabbed) {
             val sh = height
             val font = mc.font
@@ -620,14 +620,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             val contentH = settingRows.size * (rowHeight + 1)
             val maxScroll = (contentH - listH).coerceAtLeast(0)
             if (maxScroll > 0) {
-                val delta = (mouseY.toInt() - scrollBarGrabY).toFloat()
+                val delta = (event.y().toInt() - scrollBarGrabY).toFloat()
                 val thumbH = (listH.toFloat() / contentH.toFloat() * listH).toInt().coerceAtLeast(16)
                 val scrollPerPixel = maxScroll.toFloat() / (listH - thumbH).toFloat()
                 scrollOffset = (scrollBarGrabOffset - delta * scrollPerPixel).toInt().coerceIn(-maxScroll, 0)
             }
             return true
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        return super.mouseDragged(event, dx, dy)
     }
 
     // Keyboard handling
