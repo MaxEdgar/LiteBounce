@@ -86,15 +86,22 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         context.text(font, titleText, sw / 2 - font.width(titleText) / 2,
             backButtonY, 0xFF66FF66.toInt(), false)
 
-        // Module description
+        // Module description (truncated if too long)
         val descText = module.description.get()
-        val descY = backButtonY + backButtonH + 2
-        if (!descText.isNullOrBlank()) {
-            context.text(font, descText, sw / 2 - font.width(descText) / 2,
+        val showDesc = !descText.isNullOrBlank()
+        if (showDesc) {
+            val descY = backButtonY + backButtonH + 2
+            val maxDescWidth = sw - 40
+            val displayDesc = if (font.width(descText) > maxDescWidth) {
+                font.plainSubstrByWidth(descText, maxDescWidth) + "..."
+            } else {
+                descText
+            }
+            context.text(font, displayDesc, sw / 2 - font.width(displayDesc) / 2,
                 descY, 0xFF888888.toInt(), false)
         }
 
-        val startY = descY + if (!descText.isNullOrBlank()) font.lineHeight + 2 else 4
+        val startY = backButtonY + backButtonH + 2 + if (showDesc) font.lineHeight + 2 else 4
 
         // Build setting rows
         settingRows.clear()
