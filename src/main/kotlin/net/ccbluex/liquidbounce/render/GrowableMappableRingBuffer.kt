@@ -138,7 +138,14 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             ring.rotate()
             currentOffset = 0
             alignedOffset = 0
-            ring.currentBuffer()
+            try {
+                ring.currentBuffer()
+            } catch (e2: IllegalStateException) {
+                // Second attempt also failed — all fences are from the same submit.
+                // Propagate as RuntimeException so BatchCollector can skip this draw gracefully.
+                logger.warn("Intel GPU fence workaround: retry also failed for '${label}', skipping draw: ${e2.message}")
+                throw RuntimeException("Intel GPU fence timeout on ring buffer '${label}'", e2)
+            }
         }
         val sliceOffset = alignedOffset.toLong()
         val slice = buffer.slice(sliceOffset, byteCount.toLong())

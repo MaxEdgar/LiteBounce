@@ -92,11 +92,17 @@ internal class BatchCollector {
             for (draw in drawOrder) {
                 if (draw.readyToBuild) {
                     draw.builder.build()?.use { meshData ->
-                        builtBuffers += BuiltDraw(
-                            draw.key,
-                            meshData.toMeshDraw(draw.key.pipeline),
-                            draw.order,
-                        )
+                        try {
+                            builtBuffers += BuiltDraw(
+                                draw.key,
+                                meshData.toMeshDraw(draw.key.pipeline),
+                                draw.order,
+                            )
+                        } catch (e: RuntimeException) {
+                            // Intel GPU workaround: If the ring buffer fence can't be awaited,
+                            // skip this draw gracefully instead of crashing the game.
+                            logger.warn("Skipping draw for '${draw.key.pipeline.location}' due to GPU fence issue: ${e.message}")
+                        }
                     }
                 }
             }
