@@ -123,11 +123,7 @@ class SearchOverlay : Screen(Component.literal("")) {
         }
     }
 
-    override fun mouseClicked(context: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        val mouseX = context.x().toInt()
-        val mouseY = context.y().toInt()
-        val button = context.button()
-
+    private fun findClickedModule(mouseX: Int, mouseY: Int): Triple<Module, Int, Boolean>? {
         val searchBarX = width / 4
         val searchBarW = width / 2
         val searchBarY = 8
@@ -144,34 +140,38 @@ class SearchOverlay : Screen(Component.literal("")) {
 
             if (mouseY >= itemY && mouseY < itemY + itemH &&
                 mouseX >= searchBarX && mouseX < searchBarX + searchBarW) {
-
-                val hasSettings = module.inner.isNotEmpty()
-
-                // Right click -> open settings screen
-                if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                    if (hasSettings) {
-                        mc.gui.setScreen(SettingsScreen(module))
-                        return true
-                    }
-                    return super.mouseClicked(context, doubleClick)
-                }
-
-                // Left click -> toggle or open settings via > arrow
-                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                    val arrowX = searchBarX + searchBarW - 10
-
-                    if (hasSettings && mouseX >= arrowX) {
-                        mc.gui.setScreen(SettingsScreen(module))
-                    } else {
-                        module.enabled = !module.enabled
-                    }
-                    return true
-                }
-
-                return super.mouseClicked(context, doubleClick)
+                return Triple(module, itemY, searchBarX + searchBarW - 10)
             }
 
             currentY += itemH + 1
+        }
+
+        return null
+    }
+
+    override fun mouseClicked(context: MouseButtonEvent, doubleClick: Boolean): Boolean {
+        val mouseX = context.x().toInt()
+        val mouseY = context.y().toInt()
+        val button = context.button()
+
+        val clicked = findClickedModule(mouseX, mouseY)
+
+        if (clicked != null) {
+            val (module, itemY, arrowX) = clicked
+            val hasSettings = module.inner.isNotEmpty()
+
+            // Left click on > arrow or right click anywhere -> open settings
+            if ((button == GLFW.GLFW_MOUSE_BUTTON_LEFT && hasSettings && mouseX >= arrowX) ||
+                (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && hasSettings)) {
+                mc.gui.setScreen(SettingsScreen(module))
+                return true
+            }
+
+            // Left click on module body -> toggle
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                module.enabled = !module.enabled
+                return true
+            }
         }
 
         return super.mouseClicked(context, doubleClick)
