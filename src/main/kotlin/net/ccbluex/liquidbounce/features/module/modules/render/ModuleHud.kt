@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.hud.IngameHUD
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.hud.ModuleListHUD
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -54,8 +52,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     private val isVisible: Boolean
         get() = !isHidingNow && inGame
 
-    private val ingameHUD = IngameHUD()
-
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
         EventManager.callEvent(SpaceSeperatedNamesChangeEvent(state))
@@ -70,9 +66,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         if (isHidingNow) {
             chat(markAsError(message("hidingAppearance")))
         }
-
-        // HUD handlers auto-register via EventListener handler delegates
-        // No explicit registration needed
     }
 
     override fun onDisabled() {

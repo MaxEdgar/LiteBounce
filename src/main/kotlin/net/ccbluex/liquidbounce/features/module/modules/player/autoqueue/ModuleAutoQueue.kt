@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueCustom
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueGommeDuels
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueHypixelSW
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ModuleSearchScreen
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.SearchOverlay
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.client.gui.screens.PauseScreen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -46,7 +46,7 @@ object ModuleAutoQueue : ClientModule("AutoQueue", ModuleCategories.PLAYER, alia
         CLICK_GUI_OPEN("ClickGuiOpen") {
             override fun getAsBoolean(): Boolean {
                 val screen = mc.gui.screen()
-                return screen is ModuleSearchScreen
+                return screen is SearchOverlay
             }
         },
         CHAT_SCREEN_OPEN("ChatScreenOpen") {
