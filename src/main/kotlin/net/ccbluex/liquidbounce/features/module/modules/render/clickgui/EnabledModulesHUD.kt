@@ -39,7 +39,7 @@ class EnabledModulesHUD : EventListener {
 
     private fun render(context: GuiGraphicsExtractor) {
         val font = Minecraft.getInstance().font
-        val activeModules = ModuleManager.filter { it.enabled && !it.hide }
+        val activeModules = ModuleManager.sortedBy { it.name }.filter { it.enabled && !it.hide }
 
         if (activeModules.isEmpty()) {
             return
