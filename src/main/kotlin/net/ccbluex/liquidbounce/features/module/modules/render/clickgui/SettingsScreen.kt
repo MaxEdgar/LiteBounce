@@ -93,7 +93,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         buildRows(module.inner, 0)
 
         // Clamp scroll
-        val maxScroll = -(settingRows.size * (rowHeight + 1) - (sh - startY)).coerceAtLeast(0)
+        val maxScroll = (settingRows.size * (rowHeight + 1) - (sh - startY)).coerceAtLeast(0)
         scrollOffset = scrollOffset.coerceIn(-maxScroll, 0)
 
         // Header separator
