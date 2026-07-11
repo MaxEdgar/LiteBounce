@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.componen
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.components.TextComponent
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.components.ToggleableGroupComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.Minecraft
 import java.io.File
 
 /**
@@ -57,11 +56,6 @@ object NativeClickGui {
     }
 
     val gui: ClickGui get() = guiInstance
-
-    @JvmStatic
-    fun open() {
-        Minecraft.getInstance().gui.setScreen(ClickGuiScreen(gui))
-    }
 
     /**
      * Creates the appropriate ClickGUI component for a given LiquidBounce value.
