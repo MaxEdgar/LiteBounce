@@ -90,23 +90,7 @@ internal class BatchCollector {
                 return
             }
 
-            for (draw in drawOrder) {
-                if (draw.readyToBuild) {
-                    draw.builder.build()?.use { meshData ->
-                        try {
-                            builtBuffers += BuiltDraw(
-                                draw.key,
-                                meshData.toMeshDraw(draw.key.pipeline),
-                                draw.order,
-                            )
-                        } catch (e: IllegalStateException) {
-                            // Intel GPU workaround: If the ring buffer fence can't be awaited,
-                            // skip this draw gracefully instead of crashing the game.
-                            logger.warn("Skipping draw for '${draw.key.pipeline.location}' due to GPU fence issue: ${e.message}")
-                        }
-                    }
-                }
-            }
+            buildAllDraws()
 
             if (builtBuffers.isEmpty) {
                 return
@@ -134,6 +118,26 @@ internal class BatchCollector {
             clearBuilders()
             ClientTesselator.recycleAll(bufferAllocatorInUse)
             bufferAllocatorInUse.clear()
+        }
+    }
+
+    private fun buildAllDraws() {
+        for (draw in drawOrder) {
+            if (draw.readyToBuild) {
+                draw.builder.build()?.use { meshData ->
+                    try {
+                        builtBuffers += BuiltDraw(
+                            draw.key,
+                            meshData.toMeshDraw(draw.key.pipeline),
+                            draw.order,
+                        )
+                    } catch (e: IllegalStateException) {
+                        // Intel GPU workaround: If the ring buffer fence can't be awaited,
+                        // skip this draw gracefully instead of crashing the game.
+                        logger.warn("Skipping draw for '${draw.key.pipeline.location}' due to GPU fence issue: ${e.message}")
+                    }
+                }
+            }
         }
     }
 
