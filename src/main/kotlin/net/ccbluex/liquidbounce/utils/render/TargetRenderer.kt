@@ -90,7 +90,7 @@ class TargetRenderer(
         doNotIncludeAlways()
     }
 
-    private val appearance = modes(owner, "Mode", 3) {
+    private val appearance = modes(owner, "Mode", 7) {
         arrayOf(
             TargetRenderAppearance.World.Legacy(it),
             TargetRenderAppearance.World.Circle(owner, it),

@@ -602,11 +602,11 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     // Scroll wheel
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
-        if (scrollBarGrabbed) return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+        if (scrollBarGrabbed) return true
         val scrollDelta = (verticalAmount * 20).toInt()
         scrollOffset += scrollDelta
         scrollOffset = scrollOffset.coerceAtMost(0)
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+        return true
     }
 
     override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {

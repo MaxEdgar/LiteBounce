@@ -59,8 +59,8 @@ open class PlacementRenderer(
     val fadeInCurve by enumChoice("FadeInCurve", Easing.LINEAR)
     val fadeOutCurve by enumChoice("FadeOutCurve", Easing.LINEAR)
 
-    val inTime by int("InTime", 500, 0..5000, "ms")
-    val outTime by int("OutTime", 500, 0..5000, "ms")
+    val inTime by int("InTime", 0, 0..5000, "ms")
+    val outTime by int("OutTime", 0, 0..5000, "ms")
 
     val colorSetting by color("Color", defaultColor)
     val outlineColorSetting by color("OutlineColor", defaultColor.with(a = 255))

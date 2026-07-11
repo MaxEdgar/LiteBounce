@@ -185,7 +185,7 @@ class SearchOverlay : Screen(Component.literal("")) {
         val scrollDelta = (verticalAmount * 15).toInt()
         scrollOffset += scrollDelta
         scrollOffset = scrollOffset.coerceAtMost(0)
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+        return true
     }
 
     override fun charTyped(event: CharacterEvent): Boolean {
