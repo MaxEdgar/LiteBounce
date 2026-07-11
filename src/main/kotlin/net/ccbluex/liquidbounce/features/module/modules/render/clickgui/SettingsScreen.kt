@@ -477,6 +477,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 true
             }
             ControlType.MULTI_ENUM -> {
+                @Suppress("UNCHECKED_CAST")
                 val value = row.value as MultiChoiceListValue<Any>
                 val all = value.choices.toList()
                 val selected = value.get()
