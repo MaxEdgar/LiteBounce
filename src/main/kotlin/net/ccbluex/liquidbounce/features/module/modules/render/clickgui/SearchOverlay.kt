@@ -127,7 +127,6 @@ class SearchOverlay : Screen(Component.literal("")) {
         val mouseX = context.x().toInt()
         val mouseY = context.y().toInt()
         val button = context.button()
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return super.mouseClicked(context, doubleClick)
 
         val searchBarX = width / 4
         val searchBarW = width / 2
@@ -147,15 +146,29 @@ class SearchOverlay : Screen(Component.literal("")) {
                 mouseX >= searchBarX && mouseX < searchBarX + searchBarW) {
 
                 val hasSettings = module.inner.isNotEmpty()
-                val arrowX = searchBarX + searchBarW - 10
 
-                if (hasSettings && mouseX >= arrowX) {
-                    // Open settings screen for this module
-                    mc.gui.setScreen(SettingsScreen(module))
-                } else {
-                    module.enabled = !module.enabled
+                // Right click -> open settings screen
+                if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                    if (hasSettings) {
+                        mc.gui.setScreen(SettingsScreen(module))
+                        return true
+                    }
+                    return super.mouseClicked(context, doubleClick)
                 }
-                return true
+
+                // Left click -> toggle or open settings via > arrow
+                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                    val arrowX = searchBarX + searchBarW - 10
+
+                    if (hasSettings && mouseX >= arrowX) {
+                        mc.gui.setScreen(SettingsScreen(module))
+                    } else {
+                        module.enabled = !module.enabled
+                    }
+                    return true
+                }
+
+                return super.mouseClicked(context, doubleClick)
             }
 
             currentY += itemH + 1
