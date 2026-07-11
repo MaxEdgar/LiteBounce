@@ -98,7 +98,7 @@ internal class BatchCollector {
                                 meshData.toMeshDraw(draw.key.pipeline),
                                 draw.order,
                             )
-                        } catch (e: RuntimeException) {
+                        } catch (e: IllegalStateException) {
                             // Intel GPU workaround: If the ring buffer fence can't be awaited,
                             // skip this draw gracefully instead of crashing the game.
                             logger.warn("Skipping draw for '${draw.key.pipeline.location}' due to GPU fence issue: ${e.message}")
