@@ -123,7 +123,7 @@ class SearchOverlay : Screen(Component.literal("")) {
         }
     }
 
-    private fun findClickedModule(mouseX: Int, mouseY: Int): Triple<Module, Int, Boolean>? {
+    private fun findClickedModule(mouseX: Int, mouseY: Int): Triple<net.ccbluex.liquidbounce.features.module.ClientModule, Int, Int>? {
         val searchBarX = width / 4
         val searchBarW = width / 2
         val searchBarY = 8
