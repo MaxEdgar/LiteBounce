@@ -178,7 +178,7 @@ class SearchOverlay : Screen(Component.literal("")) {
     override fun charTyped(event: CharacterEvent): Boolean {
         val codePoint = event.codepoint()
         if (!Character.isISOControl(codePoint)) {
-            searchQuery += codePoint
+            searchQuery += codePoint.toChar()
             scrollOffset = 0
             return true
         }
