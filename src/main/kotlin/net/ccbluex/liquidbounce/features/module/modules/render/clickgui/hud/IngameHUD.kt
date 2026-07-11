@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.clickgui.hud
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGuiScreen
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ModuleSearchScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -41,7 +41,7 @@ class IngameHUD : EventListener {
 
         // Render pinned windows if ClickGUI is not open
         val clickGui = NativeClickGui.gui
-        if (mc.gui.screen() !is ClickGuiScreen) {
+        if (mc.gui.screen() !is ModuleSearchScreen) {
             clickGui.renderPinnedWindows(context, partialTicks)
         }
     }

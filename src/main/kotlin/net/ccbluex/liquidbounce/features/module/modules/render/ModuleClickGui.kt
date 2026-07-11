@@ -25,8 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ClickGuiScreen
-import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.NativeClickGui
+import net.ccbluex.liquidbounce.features.module.modules.render.clickgui.ModuleSearchScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import org.lwjgl.glfw.GLFW
 
@@ -87,7 +86,7 @@ object ModuleClickGui :
         }
 
         mc.execute {
-            NativeClickGui.open()
+            mc.gui.setScreen(ModuleSearchScreen())
         }
         super.onEnabled()
     }

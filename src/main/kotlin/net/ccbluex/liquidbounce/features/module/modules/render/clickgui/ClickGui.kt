@@ -579,6 +579,14 @@ class ClickGui(private val windowsFile: Path) {
     fun addWindow(window: Window) { windows.add(window) }
     fun addPopup(popup: Popup) { popups.add(popup) }
 
+    /**
+     * Closes all closable windows (settings windows).
+     * Used when the ModuleSearchScreen is closed to prevent ghost windows.
+     */
+    fun closeAllWindows() {
+        windows.removeIf { it.isClosable() }
+    }
+
     companion object {
         private val scale: Int get() = Minecraft.getInstance().window.guiScale
 
