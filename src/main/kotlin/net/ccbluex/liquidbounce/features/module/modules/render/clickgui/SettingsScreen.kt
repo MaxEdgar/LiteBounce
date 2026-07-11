@@ -36,7 +36,6 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.util.CommonColors
-import net.minecraft.client.KeyboardHandler
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -517,7 +516,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         // If listening for a keybind, capture the key
         if (listeningForKey != null && input.key != GLFW.GLFW_KEY_ESCAPE) {
             @Suppress("UNCHECKED_CAST")
-            (listeningForKey!! as Value<*>).set(input.key)
+            (listeningForKey!! as Value<Int>).set(input.key)
             listeningForKey = null
             return true
         }
