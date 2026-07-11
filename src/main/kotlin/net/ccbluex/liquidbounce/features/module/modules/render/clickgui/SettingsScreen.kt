@@ -37,28 +37,30 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.util.CommonColors
 import org.lwjgl.glfw.GLFW
 
 /**
  * Settings editor screen for a single module.
  * Renders all module settings as an interactive scrollable list.
- * Each setting is rendered with its name and an appropriate control.
  */
 @Suppress("CognitiveComplexMethod", "LongMethod", "TooManyFunctions")
 class SettingsScreen(private val module: ClientModule) : Screen(Component.literal("")) {
 
     private var scrollOffset = 0
+    private var scrollBarGrabbed = false
+    private var scrollBarGrabY = 0
+    private var scrollBarGrabOffset = 0
     private var listeningForKey: BindValue? = null
 
     private val settingRows = mutableListOf<SettingRow>()
 
-    private val rowHeight = 14
-    private val indent = 8
+    private val rowHeight = 16
+    private val indent = 10
+    private val headerH = 14
 
-    private val backButtonX = 4
-    private val backButtonY = 4
-    private val backButtonW: Int get() = mc.font.width("<- Back")
+    private val backButtonX = 6
+    private val backButtonY = 6
+    private val backButtonW: Int get() = mc.font.width("\u2190 Back")  // ← arrow
     private val backButtonH = 12
 
     override fun isPauseScreen() = false
@@ -73,107 +75,159 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val sh = height
         val font = mc.font
 
-        context.fill(0, 0, sw, sh, 0xCC111111.toInt())
+        // ── Background ──
+        context.fill(0, 0, sw, sh, 0xCC0D0D1A.toInt())
+
+        // ── Top bar ──
+        context.fill(0, 0, sw, backButtonH + 10, 0xCC151528.toInt())
+        context.fill(0, backButtonH + 10, sw, backButtonH + 11, 0xFF333355.toInt())
 
         // Back button
-        val backHover = mouseX in backButtonX..<backButtonX + backButtonW &&
+        val backHover = mouseX in backButtonX..<backButtonX + backButtonW + 4 &&
             mouseY in backButtonY..<backButtonY + backButtonH
-        context.text(font, "<- Back", backButtonX, backButtonY,
+        if (backHover) {
+            context.fill(backButtonX - 2, backButtonY, backButtonX + backButtonW + 2, backButtonY + backButtonH,
+                0xFF222244.toInt())
+        }
+        context.text(font, "<- Back", backButtonX, backButtonY + 1,
             if (backHover) 0xFFFFAA00.toInt() else 0xFFAAAAAA.toInt(), false)
 
         // Module title
         val titleText = "${module.name} Settings"
         context.text(font, titleText, sw / 2 - font.width(titleText) / 2,
-            backButtonY, 0xFF66FF66.toInt(), false)
+            backButtonY + 1, 0xFF66FF66.toInt(), false)
 
         // Module description (truncated if too long)
         val descText = module.description.get()
         val showDesc = !descText.isNullOrBlank()
         if (showDesc) {
-            val descY = backButtonY + backButtonH + 2
+            val descY = backButtonH + 13
             val maxDescWidth = sw - 40
             val displayDesc = if (font.width(descText) > maxDescWidth) {
-                font.plainSubstrByWidth(descText, maxDescWidth) + "..."
+                font.plainSubstrByWidth(descText, maxDescWidth - font.width("...")) + "..."
             } else {
                 descText
             }
             context.text(font, displayDesc, sw / 2 - font.width(displayDesc) / 2,
-                descY, 0xFF888888.toInt(), false)
+                descY, 0xFF777788.toInt(), false)
         }
 
-        val startY = backButtonY + backButtonH + 2 + if (showDesc) font.lineHeight + 2 else 4
+        val topBarH = backButtonH + 11 + if (showDesc) font.lineHeight + 3 else 8
 
-        // Build setting rows
+        // ── Build setting rows ──
         settingRows.clear()
-        buildRows(module.inner, 0)
+        buildRows(module.inner, 0, isTopLevel = true)
 
-        // Clamp scroll
-        val maxScroll = (settingRows.size * (rowHeight + 1) - (sh - startY)).coerceAtLeast(0)
+        // ── Scroll calculations ──
+        val listStartY = topBarH
+        val listEndY = sh - 4
+        val listH = listEndY - listStartY
+        val contentH = settingRows.size * (rowHeight + 1)
+        val maxScroll = (contentH - listH).coerceAtLeast(0)
         scrollOffset = scrollOffset.coerceIn(-maxScroll, 0)
 
-        // Header separator
-        context.fill(sw / 4, startY, 3 * sw / 4, startY + 1, 0xFF444444.toInt())
+        val listX = sw / 4
+        val listW = sw / 2
+        val controlAreaX = listX + listW * 3 / 5 + 4
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
 
-        val listStartX = sw / 4 + 4
-        val listWidth = sw / 2 - 8
-        val controlAreaX = listStartX + listWidth * 3 / 5
-        val controlWidth = listWidth * 2 / 5
+        // ── Render rows ──
+        context.guiRenderState.enableScissor(0, listStartY, sw, (listEndY - listStartY).coerceAtLeast(0))
 
-        var currentY = startY + 4 + scrollOffset
+        var currentY = listStartY + scrollOffset
 
-        for (row in settingRows) {
+        for ((index, row) in settingRows.withIndex()) {
             row.y = currentY
+            val itemH = if (row.isGroup && row.isTopLevel) headerH else rowHeight
 
-            if (currentY + rowHeight >= startY && currentY < sh) {
+            if (currentY + itemH >= listStartY - itemH && currentY < listEndY) {
                 val itemY = currentY
-                val hovering = mouseX >= listStartX && mouseY >= itemY &&
-                    mouseX < listStartX + listWidth && mouseY < itemY + rowHeight
+                val hovering = mouseX >= listX && mouseY >= itemY &&
+                    mouseX < listX + listW && mouseY < itemY + itemH
 
-                val bgColor = if (hovering) 0xFF333333.toInt() else 0xFF1A1A1A.toInt()
-                context.fill(listStartX, itemY, listStartX + listWidth, itemY + rowHeight, bgColor)
-                context.guiRenderState.up()
+                if (row.isGroup && row.isTopLevel) {
+                    // ── Group header styling ──
+                    val headerBg = if (hovering) 0xFF1A1A35.toInt() else 0xFF151528.toInt()
+                    context.fill(listX, itemY, listX + listW, itemY + headerH, headerBg)
+                    context.fill(listX, itemY + headerH, listX + listW, itemY + headerH + 1, 0xFF2A2A55.toInt())
 
-                val rowX = listStartX + row.indent * indent
+                    val rowX = listX + 6
+                    context.text(font, row.name, rowX, itemY + 2, 0xFF9999CC.toInt(), false)
 
-                // Name label
-                val nameColor = if (row.isGroup) 0xFFAAAAAA.toInt() else 0xFFF0F0F0.toInt()
-                val namePrefix = if (row.isGroup) "[" else ""
-                val nameSuffix = if (row.isGroup) "]" else ""
-                val displayName = "$namePrefix${row.name}$nameSuffix"
-                context.text(font, displayName, rowX, itemY + 2, nameColor, false)
+                } else {
+                    // ── Regular setting row ──
+                    val bgColor = when {
+                        hovering -> 0xFF1E1E35.toInt()
+                        index % 2 == 0 -> 0xFF131325.toInt()
+                        else -> 0xFF111120.toInt()
+                    }
+                    context.fill(listX, itemY, listX + listW, itemY + itemH, bgColor)
 
-                renderControl(context, row, controlAreaX, itemY, controlWidth, mouseX, mouseY)
+                    val rowX = listX + 6 + row.indent * indent
+
+                    // Name label
+                    val namePrefix = if (row.isGroup) "\u25B6 " else ""
+                    val nameSuffix = if (row.isGroup) "" else ""
+                    val displayName = "$namePrefix${row.name}$nameSuffix"
+                    val nameColor = when {
+                        row.isGroup -> 0xFF88AAFF.toInt()
+                        else -> 0xFFDDDDEE.toInt()
+                    }
+                    context.text(font, displayName, rowX, itemY + 3, nameColor, false)
+
+                    // Separator line between name and control
+                    val sepX = rowX + font.width(displayName) + 4
+                    if (sepX + 4 < controlAreaX) {
+                        context.fill(sepX, itemY + itemH / 2, controlAreaX - 2, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
+                    }
+
+                    // Render control
+                    renderControl(context, row, controlAreaX, itemY, controlWidth, mouseX, mouseY)
+                }
             }
 
-            currentY += rowHeight + 1
+            currentY += itemH + 1
         }
 
-        // Keybind listening indicator
-        if (listeningForKey != null) {
-            context.text(font, "Press a key...", sw / 2 - 40, sh / 2, CommonColors.YELLOW, false)
+        context.guiRenderState.disableScissor()
+
+        // ── Scrollbar ──
+        if (maxScroll > 0) {
+            val scrollBarX = listX + listW + 2
+            val scrollBarW = 4
+            val scrollBarH = listH
+            val thumbH = (listH.toFloat() / (contentH.toFloat()).coerceAtLeast(1f) * scrollBarH).toInt().coerceAtLeast(16)
+            val thumbY = listStartY + ((-scrollOffset).toFloat() / maxScroll * (scrollBarH - thumbH)).toInt()
+
+            // Track
+            context.fill(scrollBarX, listStartY, scrollBarX + scrollBarW, listStartY + scrollBarH, 0xFF1A1A33.toInt())
+            // Thumb
+            val thumbHover = mouseX in scrollBarX..<scrollBarX + scrollBarW && mouseY in thumbY..<thumbY + thumbH
+            context.fill(scrollBarX, thumbY, scrollBarX + scrollBarW, thumbY + thumbH,
+                if (thumbHover) 0xFF5555AA.toInt() else 0xFF333377.toInt())
         }
     }
 
-    private fun buildRows(container: Iterable<Value<*>>, depth: Int) {
+    private fun buildRows(container: Iterable<Value<*>>, depth: Int, isTopLevel: Boolean = false) {
         for (value in container) {
             when (value) {
                 is ToggleableValueGroup -> {
-                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, type = ControlType.TOGGLE_GROUP))
+                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, isTopLevel = isTopLevel || depth == 0, type = ControlType.TOGGLE_GROUP))
                     buildRows(value.inner, depth + 1)
                 }
                 is ModeValueGroup<*> -> {
-                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, type = ControlType.MODE_GROUP))
+                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, isTopLevel = isTopLevel || depth == 0, type = ControlType.MODE_GROUP))
                     if (value.activeMode.inner.isNotEmpty()) {
                         buildRows(value.activeMode.inner, depth + 1)
                     }
                 }
                 is ValueGroup -> {
-                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, type = ControlType.NONE))
+                    settingRows.add(SettingRow(value.name, value, depth, isGroup = true, isTopLevel = isTopLevel || depth == 0, type = ControlType.NONE))
                     buildRows(value.inner, depth + 1)
                 }
                 else -> {
                     val controlType = detectControlType(value)
-                    settingRows.add(SettingRow(value.name, value, depth, isGroup = false, type = controlType))
+                    settingRows.add(SettingRow(value.name, value, depth, isGroup = false, isTopLevel = false, type = controlType))
                 }
             }
         }
@@ -196,91 +250,81 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
-    // --- Control renderers ---
+    // ── Control renderers ──
 
     private fun renderControl(
         context: GuiGraphicsExtractor, row: SettingRow,
         x: Int, y: Int, w: Int, mouseX: Int, mouseY: Int
     ) {
         when (row.type) {
-            ControlType.BOOLEAN -> renderBoolean(context, row.value as Value<Boolean>, x, y, w, mouseX, mouseY)
-            ControlType.INT_RANGE -> renderIntRange(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY)
-            ControlType.FLOAT_RANGE -> renderFloatRange(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY)
-            ControlType.ENUM -> renderEnum(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY)
+            ControlType.BOOLEAN -> renderToggle(context, row.value as Value<Boolean>, x, y, w, mouseX, mouseY)
+            ControlType.INT_RANGE -> renderStepper(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY) { it.toString() }
+            ControlType.FLOAT_RANGE -> renderStepper(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY) { String.format("%.1f", it) }
+            ControlType.ENUM -> renderStepper(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY) { it.toString() }
             ControlType.MULTI_ENUM -> renderMultiEnum(context, row.value as MultiChoiceListValue<*>, x, y, w)
             ControlType.TEXT -> renderText(context, row.value as Value<String>, x, y, w)
             ControlType.COLOR -> renderColor(context, row.value as Value<Color4b>, x, y, w)
             ControlType.BIND -> renderBind(context, row.value, x, y, w, mouseX, mouseY)
-            ControlType.TOGGLE_GROUP -> renderToggleGroup(context, row.value as ToggleableValueGroup, x, y, w, mouseX, mouseY)
-            ControlType.MODE_GROUP -> renderModeGroup(context, row.value as ModeValueGroup<*>, x, y, w, mouseX, mouseY)
+            ControlType.TOGGLE_GROUP -> renderToggle(context, (row.value as ToggleableValueGroup).findEnabledValue(), x, y, w, mouseX, mouseY)
+            ControlType.MODE_GROUP -> renderStepper(context, row.value as ModeValueGroup<*>, x, y, w, mouseX, mouseY) { it.activeMode.tag }
             ControlType.NONE -> renderNone(context, row.value, x, y, w)
         }
     }
 
-    private fun renderBoolean(
-        ctx: GuiGraphicsExtractor, value: Value<Boolean>,
+    /** Pill-style toggle ON/OFF button */
+    private fun renderToggle(
+        ctx: GuiGraphicsExtractor, value: Value<Boolean>?,
         x: Int, y: Int, w: Int, mx: Int, my: Int
     ) {
+        if (value == null) return
         val enabled = value.get()
-        val btnW = 30
+        val btnW = 36
         val btnX = x + w - btnW
-        val hover = mx in btnX..<btnX + btnW && my in y..<y + rowHeight
-        val bgColor = when {
-            enabled && hover -> 0xFF4A8A37.toInt()
-            enabled -> 0xFF3A7A27.toInt()
-            hover -> 0xFF555555.toInt()
-            else -> 0xFF444444.toInt()
-        }
-        ctx.fill(btnX, y, btnX + btnW, y + rowHeight, bgColor)
+        val btnH = rowHeight - 4
+        val btnY = y + 2
+        val hover = mx in btnX..<btnX + btnW && my in btnY..<btnY + btnH
+
+        // Pill background
+        ctx.fill(btnX, btnY, btnX + btnW, btnY + btnH,
+            if (enabled) 0xFF2D5A27.toInt() else 0xFF333344.toInt())
+
+        // Slider nub
+        val nubW = btnW / 2
+        val nubX = if (enabled) btnX + btnW - nubW else btnX
+        ctx.fill(nubX, btnY, nubX + nubW, btnY + btnH,
+            if (hover) 0xFF66CC66.toInt() else if (enabled) 0xFF44AA44.toInt() else 0xFF666677.toInt())
+
+        val font = mc.font
         val text = if (enabled) "ON" else "OFF"
-        val font = mc.font
-        ctx.text(font, text, btnX + (btnW - font.width(text)) / 2, y + 2,
-            if (enabled) 0xFFFFFFFF.toInt() else 0xFFAAAAAA.toInt(), false)
+        ctx.text(font, text, btnX + (btnW - font.width(text)) / 2, btnY + 2,
+            if (enabled) 0xFFFFFFFF.toInt() else 0xFF999999.toInt(), false)
     }
 
-    private fun renderIntRange(
-        ctx: GuiGraphicsExtractor, value: RangedValue<Int>,
-        x: Int, y: Int, w: Int, mx: Int, my: Int
+    /** Left/right stepper control for ranged values, enums, and mode groups */
+    private fun <T> renderStepper(
+        ctx: GuiGraphicsExtractor, value: Any,
+        x: Int, y: Int, w: Int, mx: Int, my: Int,
+        displayFn: (Any) -> String
     ) {
         val font = mc.font
-        val text = value.get().toString()
+        val text = displayFn(value)
+        val btnSize = 10
+        val btnY = y + 3
         val decX = x
-        val incX = x + w - 8
-        val decHover = mx in decX..<decX + 8 && my in y..<y + rowHeight
-        val incHover = mx in incX..<incX + 8 && my in y..<y + rowHeight
-        ctx.text(font, "<", decX, y + 2, if (decHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-        ctx.text(font, text, x + w / 2 - font.width(text) / 2, y + 2, 0xFFF0F0F0.toInt(), false)
-        ctx.text(font, ">", incX, y + 2, if (incHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-    }
+        val incX = x + w - btnSize
+        val decHover = mx in decX..<decX + btnSize && my in btnY..<btnY + btnSize
+        val incHover = mx in incX..<incX + btnSize && my in btnY..<btnY + btnSize                // Left arrow
+                    ctx.fill(decX, btnY, decX + btnSize, btnY + btnSize,
+                        if (decHover) 0xFF444466.toInt() else 0xFF222233.toInt())
+                    ctx.text(font, "<", decX + 2, btnY, if (decHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
 
-    private fun renderFloatRange(
-        ctx: GuiGraphicsExtractor, value: RangedValue<Float>,
-        x: Int, y: Int, w: Int, mx: Int, my: Int
-    ) {
-        val font = mc.font
-        val text = String.format("%.1f", value.get())
-        val decX = x
-        val incX = x + w - 8
-        val decHover = mx in decX..<decX + 8 && my in y..<y + rowHeight
-        val incHover = mx in incX..<incX + 8 && my in y..<y + rowHeight
-        ctx.text(font, "<", decX, y + 2, if (decHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-        ctx.text(font, text, x + w / 2 - font.width(text) / 2, y + 2, 0xFFF0F0F0.toInt(), false)
-        ctx.text(font, ">", incX, y + 2, if (incHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-    }
+                // Value text
+                    ctx.text(font, text, x + w / 2 - font.width(text) / 2, y + 3, 0xFFDDDDEE.toInt(), false)
 
-    private fun renderEnum(
-        ctx: GuiGraphicsExtractor, value: ChoiceListValue<*>,
-        x: Int, y: Int, w: Int, mx: Int, my: Int
-    ) {
-        val font = mc.font
-        val text = value.get().toString()
-        val decX = x
-        val incX = x + w - 8
-        val decHover = mx in decX..<decX + 8 && my in y..<y + rowHeight
-        val incHover = mx in incX..<incX + 8 && my in y..<y + rowHeight
-        ctx.text(font, "<", decX, y + 2, if (decHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-        ctx.text(font, text, x + w / 2 - font.width(text) / 2, y + 2, 0xFFFFDD66.toInt(), false)
-        ctx.text(font, ">", incX, y + 2, if (incHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
+                // Right arrow
+                    ctx.fill(incX, btnY, incX + btnSize, btnY + btnSize,
+                        if (incHover) 0xFF444466.toInt() else 0xFF222233.toInt())
+                    ctx.text(font, ">", incX + 2, btnY, if (incHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
     }
 
     private fun renderMultiEnum(
@@ -290,8 +334,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val font = mc.font
         val selected = value.get()
         val all = value.choices
-        val text = "${selected.size}/${all.size} selected"
-        ctx.text(font, text, x + w - font.width(text), y + 2, 0xFF888888.toInt(), false)
+        val text = "${selected.size}/${all.size}"
+        ctx.text(font, text, x + w - font.width(text), y + 3, 0xFF888899.toInt(), false)
     }
 
     private fun renderText(
@@ -300,13 +344,12 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     ) {
         val font = mc.font
         val fullText = "\"${value.get()}\""
-        val truncated = if (font.width(fullText) > w) {
-            val approxChars = w / font.width("A")
-            fullText.take(approxChars.coerceAtLeast(3)) + "..."
+        val truncated = if (font.width(fullText) > w - 4) {
+            font.plainSubstrByWidth(fullText, w - 10) + "..."
         } else {
             fullText
         }
-        ctx.text(font, truncated, x + w - font.width(truncated), y + 2, 0xFFCCCCCC.toInt(), false)
+        ctx.text(font, truncated, x + w - font.width(truncated), y + 3, 0xFFCCCCDD.toInt(), false)
     }
 
     private fun renderColor(
@@ -316,12 +359,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val font = mc.font
         val color = value.get()
         val hex = String.format("#%02X%02X%02X", color.r, color.g, color.b)
-        val boxSize = rowHeight - 4
+        val boxSize = 10
         val boxX = x + w - font.width(hex) - boxSize - 4
-        val boxY = y + 2
+        val boxY = y + 3
         val argb = (color.a.toInt() shl 24) or (color.r.toInt() shl 16) or (color.g.toInt() shl 8) or color.b.toInt()
         ctx.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, argb)
-        ctx.text(font, hex, boxX + boxSize + 3, y + 2, 0xFFCCCCCC.toInt(), false)
+        ctx.fill(boxX, boxY, boxX + boxSize, boxY + boxSize, 0x66000000.toInt())  // inner shadow
+        ctx.fill(boxX, boxY, boxX + boxSize, boxY + 1, 0x44FFFFFF.toInt())  // top highlight
+        ctx.text(font, hex, boxX + boxSize + 3, y + 3, 0xFFCCCCDD.toInt(), false)
     }
 
     private fun renderBind(
@@ -330,59 +375,26 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     ) {
         val font = mc.font
         val isListening = listeningForKey === value
-        val text = when {
-            isListening -> "Press a key..."
+        val displayText = when {
+            isListening -> "[...] Press key"
             value is BindValue -> value.get().keyName
             else -> value.get().toString()
         }
-        val btnW = font.width(text) + 8
+        val btnW = (font.width(displayText) + 10).coerceAtMost(w)
         val btnX = x + w - btnW
-        val hover = mx in btnX..<btnX + btnW && my in y..<y + rowHeight
-        val bgColor = when {
-            isListening -> 0xFFAA5500.toInt()
-            hover -> 0xFF444444.toInt()
-            else -> 0xFF333333.toInt()
-        }
-        ctx.fill(btnX, y, btnX + btnW, y + rowHeight, bgColor)
-        ctx.text(font, text, btnX + 4, y + 2,
-            if (isListening) CommonColors.YELLOW else 0xFFF0F0F0.toInt(), false)
-    }
+        val btnH = rowHeight - 4
+        val btnY = y + 2
+        val hover = mx in btnX..<btnX + btnW && my in btnY..<btnY + btnH
 
-    private fun renderToggleGroup(
-        ctx: GuiGraphicsExtractor, value: ToggleableValueGroup,
-        x: Int, y: Int, w: Int, mx: Int, my: Int
-    ) {
-        val font = mc.font
-        val enabledValue = value.inner.find { it.name == "Enabled" } as? Value<Boolean>
-        val enabled = enabledValue?.get() ?: true
-        val btnW = 30
-        val btnX = x + w - btnW
-        val hover = mx in btnX..<btnX + btnW && my in y..<y + rowHeight
         val bgColor = when {
-            enabled && hover -> 0xFF4A8A37.toInt()
-            enabled -> 0xFF3A7A27.toInt()
-            hover -> 0xFF555555.toInt()
-            else -> 0xFF444444.toInt()
+            isListening -> 0xFF883322.toInt()
+            hover -> 0xFF333355.toInt()
+            else -> 0xFF222233.toInt()
         }
-        ctx.fill(btnX, y, btnX + btnW, y + rowHeight, bgColor)
-        val text = if (enabled) "ON" else "OFF"
-        ctx.text(font, text, btnX + (btnW - font.width(text)) / 2, y + 2,
-            if (enabled) 0xFFFFFFFF.toInt() else 0xFFAAAAAA.toInt(), false)
-    }
-
-    private fun renderModeGroup(
-        ctx: GuiGraphicsExtractor, value: ModeValueGroup<*>,
-        x: Int, y: Int, w: Int, mx: Int, my: Int
-    ) {
-        val font = mc.font
-        val modeName = value.activeMode.tag
-        val decX = x
-        val incX = x + w - 8
-        val decHover = mx in decX..<decX + 8 && my in y..<y + rowHeight
-        val incHover = mx in incX..<incX + 8 && my in y..<y + rowHeight
-        ctx.text(font, "<", decX, y + 2, if (decHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
-        ctx.text(font, modeName, x + w / 2 - font.width(modeName) / 2, y + 2, 0xFFFFDD66.toInt(), false)
-        ctx.text(font, ">", incX, y + 2, if (incHover) 0xFFFFAA00.toInt() else 0xFF888888.toInt(), false)
+        ctx.fill(btnX, btnY, btnX + btnW, btnY + btnH, bgColor)
+        ctx.fill(btnX, btnY + btnH, btnX + btnW, btnY + btnH + 1, 0xFF444466.toInt())  // bottom accent
+        ctx.text(font, displayText, btnX + 5, btnY + 2,
+            if (isListening) 0xFFFFDD44.toInt() else 0xFFDDDDEE.toInt(), false)
     }
 
     private fun renderNone(
@@ -391,10 +403,10 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     ) {
         val font = mc.font
         val text = value.get().toString()
-        ctx.text(font, text, x + w - font.width(text), y + 2, 0xFF888888.toInt(), false)
+        ctx.text(font, text, x + w - font.width(text), y + 3, 0xFF888899.toInt(), false)
     }
 
-    // --- Mouse click handling ---
+    // ── Mouse click handling ──
 
     override fun mouseClicked(context: MouseButtonEvent, doubleClick: Boolean): Boolean {
         val mouseX = context.x().toInt()
@@ -404,35 +416,62 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             return super.mouseClicked(context, doubleClick)
         }
 
+        val sw = width
+        val sh = height
+        val font = mc.font
+
         // Check back button
-        if (mouseX in backButtonX..<backButtonX + backButtonW &&
+        if (mouseX in backButtonX..<backButtonX + backButtonW + 4 &&
             mouseY in backButtonY..<backButtonY + backButtonH) {
             mc.gui.setScreen(SearchOverlay())
             return true
         }
 
         // Check setting rows
-        val listStartX = width / 4 + 4
-        val listWidth = width / 2 - 8
+        val listX = sw / 4
+        val listW = sw / 2
+        val controlAreaX = listX + listW * 3 / 5 + 4
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
 
         for (row in settingRows) {
-            if (mouseY in row.y..<row.y + rowHeight &&
-                mouseX >= listStartX && mouseX < listStartX + listWidth) {
-                if (handleControlClick(row, mouseX, mouseY)) {
+            val itemH = if (row.isGroup && row.isTopLevel) headerH else rowHeight
+            if (mouseY in row.y..<row.y + itemH &&
+                mouseX >= listX && mouseX < listX + listW) {
+                if (row.isGroup && row.isTopLevel) continue  // clicking header text doesn't do anything
+                if (handleControlClick(row, mouseX, mouseY, controlAreaX, controlWidth)) {
                     return true
                 }
+            }
+        }
+
+        // Check scrollbar
+        val listStartY = backButtonH + 11 + (if (module.description.get().isNullOrBlank()) 8 else mc.font.lineHeight + 3)
+        val listEndY = sh - 4
+        val listH = listEndY - listStartY
+        val contentH = settingRows.size * (rowHeight + 1)
+        val maxScroll = (contentH - listH).coerceAtLeast(0)
+        if (maxScroll > 0) {
+            val scrollBarX = listX + listW + 2
+            val scrollBarW = 4
+            val thumbH = (listH.toFloat() / (contentH.toFloat()).coerceAtLeast(1f) * listH).toInt().coerceAtLeast(16)
+            if (mouseX in scrollBarX..<scrollBarX + scrollBarW) {
+                scrollBarGrabbed = true
+                scrollBarGrabY = mouseY
+                scrollBarGrabOffset = scrollOffset
+                return true
             }
         }
 
         return super.mouseClicked(context, doubleClick)
     }
 
+    override fun mouseReleased(context: MouseButtonEvent): Boolean {
+        scrollBarGrabbed = false
+        return super.mouseReleased(context)
+    }
+
     @Suppress("CognitiveComplexMethod", "LongMethod")
-    private fun handleControlClick(row: SettingRow, mouseX: Int, mouseY: Int): Boolean {
-        val listStartX = width / 4 + 4
-        val listWidth = width / 2 - 8
-        val controlAreaX = listStartX + listWidth * 3 / 5
-        val controlWidth = listWidth * 2 / 5
+    private fun handleControlClick(row: SettingRow, mouseX: Int, mouseY: Int, controlAreaX: Int, controlWidth: Int): Boolean {
         val x = controlAreaX
         val y = row.y
         val w = controlWidth
@@ -448,11 +487,13 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 val range = value.range
                 val min = (range as ClosedRange<Int>).start
                 val max = range.endInclusive
-                val incX = x + w - 8
+                val btnSize = 10
+                val btnY = y + 3
                 val decX = x
-                if (mouseX >= decX && mouseX < decX + 8) {
+                val incX = x + w - btnSize
+                if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
                     value.set((value.get() - 1).coerceAtLeast(min))
-                } else if (mouseX >= incX && mouseX < incX + 8) {
+                } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
                     value.set((value.get() + 1).coerceAtMost(max))
                 }
                 true
@@ -462,28 +503,32 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 val range = value.range
                 val min = (range as ClosedRange<Float>).start
                 val max = range.endInclusive
-                val incX = x + w - 8
+                val btnSize = 10
+                val btnY = y + 3
                 val decX = x
+                val incX = x + w - btnSize
                 val step = 0.5f
-                if (mouseX >= decX && mouseX < decX + 8) {
+                if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
                     value.set((value.get() - step).coerceAtLeast(min))
-                } else if (mouseX >= incX && mouseX < incX + 8) {
+                } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
                     value.set((value.get() + step).coerceAtMost(max))
                 }
                 true
             }
             ControlType.ENUM -> {
                 val value = row.value as ChoiceListValue<*>
-                val incX = x + w - 8
+                val btnSize = 10
+                val btnY = y + 3
                 val decX = x
+                val incX = x + w - btnSize
                 val options = value.choices.toList()
                 if (options.isNotEmpty()) {
                     val currentIdx = options.indexOf(value.get())
-                    if (mouseX >= decX && mouseX < decX + 8) {
+                    if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
                         val newIdx = if (currentIdx <= 0) options.size - 1 else currentIdx - 1
                         @Suppress("UNCHECKED_CAST")
                         value.set(options[newIdx] as Nothing)
-                    } else if (mouseX >= incX && mouseX < incX + 8) {
+                    } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
                         val newIdx = if (currentIdx >= options.size - 1) 0 else currentIdx + 1
                         @Suppress("UNCHECKED_CAST")
                         value.set(options[newIdx] as Nothing)
@@ -496,7 +541,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 val value = row.value as MultiChoiceListValue<Any>
                 val all = value.choices.toList()
                 val selected = value.get()
-                // Find next unselected value and toggle it
                 val toToggle = all.find { it !in selected } ?: all.firstOrNull()
                 if (toToggle != null) {
                     value.toggle(toToggle)
@@ -511,15 +555,17 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             }
             ControlType.MODE_GROUP -> {
                 val value = row.value as ModeValueGroup<*>
-                val incX = x + w - 8
+                val btnSize = 10
+                val btnY = y + 3
                 val decX = x
+                val incX = x + w - btnSize
                 val modeNames = value.modes.map { it.tag }
                 if (modeNames.isNotEmpty()) {
                     val currentIdx = modeNames.indexOf(value.activeMode.tag)
-                    if (mouseX >= decX && mouseX < decX + 8) {
+                    if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
                         val newIdx = if (currentIdx <= 0) modeNames.size - 1 else currentIdx - 1
                         value.setByString(modeNames[newIdx])
-                    } else if (mouseX >= incX && mouseX < incX + 8) {
+                    } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
                         val newIdx = if (currentIdx >= modeNames.size - 1) 0 else currentIdx + 1
                         value.setByString(modeNames[newIdx])
                     }
@@ -538,7 +584,36 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
-    // --- Keyboard handling ---
+    // ── Scroll wheel ──
+
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
+        if (scrollBarGrabbed) return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+        val scrollDelta = (verticalAmount * 20).toInt()
+        scrollOffset += scrollDelta
+        scrollOffset = scrollOffset.coerceAtMost(0)
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+    }
+
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (scrollBarGrabbed) {
+            val sh = height
+            val listStartY = backButtonH + 11 + (if (module.description.get().isNullOrBlank()) 8 else mc.font.lineHeight + 3)
+            val listEndY = sh - 4
+            val listH = listEndY - listStartY
+            val contentH = settingRows.size * (rowHeight + 1)
+            val maxScroll = (contentH - listH).coerceAtLeast(0)
+            if (maxScroll > 0) {
+                val delta = (mouseY.toInt() - scrollBarGrabY).toFloat()
+                val thumbH = (listH.toFloat() / contentH.toFloat() * listH).toInt().coerceAtLeast(16)
+                val scrollPerPixel = maxScroll.toFloat() / (listH - thumbH).toFloat()
+                scrollOffset = (scrollBarGrabOffset - delta * scrollPerPixel).toInt().coerceIn(-maxScroll, 0)
+            }
+            return true
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }
+
+    // ── Keyboard handling ──
 
     override fun keyPressed(input: KeyEvent): Boolean {
         if (input.key == GLFW.GLFW_KEY_ESCAPE) {
@@ -550,7 +625,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             return true
         }
 
-        // Capture keybind
         if (listeningForKey != null && input.key != GLFW.GLFW_KEY_ESCAPE) {
             val newBind = InputBind(InputConstants.Type.KEYSYM, input.key, InputBind.BindAction.TOGGLE)
             listeningForKey!!.set(newBind)
@@ -561,11 +635,16 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         return super.keyPressed(input)
     }
 
+    private fun ToggleableValueGroup.findEnabledValue(): Value<Boolean>? {
+        return inner.find { it.name == "Enabled" } as? Value<Boolean>
+    }
+
     private data class SettingRow(
         val name: String,
         val value: Value<*>,
         val indent: Int,
         val isGroup: Boolean,
+        val isTopLevel: Boolean,
         val type: ControlType,
         var y: Int = 0
     )
