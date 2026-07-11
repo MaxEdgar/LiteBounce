@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.CharacterEvent
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
@@ -217,13 +219,14 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
     }
 
-    override fun charTyped(codePoint: Char, modifiers: Int): Boolean {
+    override fun charTyped(event: CharacterEvent): Boolean {
+        val codePoint = event.codepoint()
         if (!Character.isISOControl(codePoint)) {
             searchQuery += codePoint
             scrollOffset = 0
             return true
         }
-        return super.charTyped(codePoint, modifiers)
+        return super.charTyped(event)
     }
 
     override fun onClose() {
@@ -232,13 +235,13 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
         super.onClose()
     }
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+    override fun keyPressed(input: KeyEvent): Boolean {
+        if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
             onClose()
             return true
         }
 
-        if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+        if (input.key() == GLFW.GLFW_KEY_BACKSPACE) {
             if (searchQuery.isNotEmpty()) {
                 searchQuery = searchQuery.dropLast(1)
                 scrollOffset = 0
@@ -246,7 +249,7 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
             return true
         }
 
-        if (keyCode == GLFW.GLFW_KEY_ENTER) {
+        if (input.key() == GLFW.GLFW_KEY_ENTER) {
             val filtered = ModuleManager.sortedBy { it.name }
                 .filter { it.name.contains(searchQuery, ignoreCase = true) || searchQuery.isEmpty() }
                 .filter { !it.disableActivation }
@@ -256,7 +259,7 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
             return true
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers)
+        return super.keyPressed(input)
     }
 
 }
