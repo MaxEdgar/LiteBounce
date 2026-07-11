@@ -236,12 +236,12 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
     }
 
     override fun keyPressed(input: KeyEvent): Boolean {
-        if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (input.key == GLFW.GLFW_KEY_ESCAPE) {
             onClose()
             return true
         }
 
-        if (input.key() == GLFW.GLFW_KEY_BACKSPACE) {
+        if (input.key == GLFW.GLFW_KEY_BACKSPACE) {
             if (searchQuery.isNotEmpty()) {
                 searchQuery = searchQuery.dropLast(1)
                 scrollOffset = 0
@@ -249,7 +249,7 @@ class ModuleSearchScreen : Screen(Component.literal("")) {
             return true
         }
 
-        if (input.key() == GLFW.GLFW_KEY_ENTER) {
+        if (input.key == GLFW.GLFW_KEY_ENTER) {
             val filtered = ModuleManager.sortedBy { it.name }
                 .filter { it.name.contains(searchQuery, ignoreCase = true) || searchQuery.isEmpty() }
                 .filter { !it.disableActivation }
