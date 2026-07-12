@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -191,9 +192,9 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Simple attack loop
         val maxClicks = clicks
         repeat(maxClicks) {
-            val wasBlocking = player.isBlockingServerside()
+            val wasBlocking = player.isBlockingServerside
             runAttack(currentTarget)
-            if (wasBlocking && !player.isBlockingServerside()) {
+            if (wasBlocking && !player.isBlockingServerside) {
                 return@tickHandler
             }
         }
@@ -221,7 +222,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         KillAuraAutoBlock.stopBlocking()
 
         attackEntity(currentTarget, SwingMode.DO_NOT_HIDE, keepSprint)
-        if (swing) player.swing(InteractionHand.MAIN_HAND)
+        if (swing) player.swing(net.minecraft.world.InteractionHand.MAIN_HAND)
 
         KillAuraAutoBlock.startBlocking()
 
