@@ -43,7 +43,7 @@ import org.lwjgl.glfw.GLFW
  * Settings editor screen for a single module.
  * Renders all module settings as an interactive scrollable list.
  */
-@Suppress("CognitiveComplexMethod", "LongMethod", "TooManyFunctions")
+@Suppress("CognitiveComplexMethod", "LongMethod", "TooManyFunctions", "LargeClass")
 class SettingsScreen(private val module: ClientModule) : Screen(Component.literal("")) {
 
     private var scrollOffset = 0
@@ -71,7 +71,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         // No blur
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "NestedBlockDepth")
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTicks: Float) {
         val sw = width
         val sh = height
@@ -685,10 +685,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         if (mouseY in geo.sliderY..<geo.sliderY + geo.sliderH && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
             val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
             val newVal = min + fraction * (max - min)
-            when (value) {
-                is RangedValue<Int> -> value.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()))
-                is RangedValue<Float> -> value.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()))
+            @Suppress("UNCHECKED_CAST")
+            fun setSliderValue(v: RangedValue<*>, nv: Double) {
+                when {
+                    v.range.start is Int -> v.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()) as Nothing)
+                    v.range.start is Float -> v.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()) as Nothing)
+                }
             }
+            setSliderValue(value, newVal)
             sliderDraggingRow = row
         }
     }
@@ -711,10 +715,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         if (mouseY in (geo.sliderY - 4)..<(geo.sliderY + geo.sliderH + 4) && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
             val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
             val newVal = min + fraction * (max - min)
-            when (value) {
-                is RangedValue<Int> -> value.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()))
-                is RangedValue<Float> -> value.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()))
+            @Suppress("UNCHECKED_CAST")
+            fun setSliderValue(v: RangedValue<*>, nv: Double) {
+                when {
+                    v.range.start is Int -> v.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()) as Nothing)
+                    v.range.start is Float -> v.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()) as Nothing)
+                }
             }
+            setSliderValue(value, newVal)
         }
     }
 
