@@ -37,7 +37,6 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Mth
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -491,6 +490,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             renderColorEditor(ctx, value, x, y, w)
         }
     }
+
+    private var colorPickerRowY = 0
 
     /** Simple inline RGB sliders for editing a color */
     private fun renderColorEditor(

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -153,15 +154,17 @@ class SearchOverlay : Screen(Component.literal("")) {
         ctx.fill(x, y + categoryHeaderH, x + w, y + categoryHeaderH + 1, 0xFF2A2A55.toInt())
 
         // Category icon (small colored square)
-        ctx.fill(x + 3, y + 3, x + 3 + 8, y + 3 + 8,
-            ModuleCategories.entries.indexOf(item.category).let { 0xFF222244 + (it * 0x222222) and 0xFFFFFF or 0xFF000000.toInt() })
+        val catColors = intArrayOf(0xFF4488FF, 0xFF44FF88, 0xFFFF8844, 0xFFFF4488, 0xFF88FF44, 0xFF8844FF, 0xFF44FFFF, 0xFFFF44FF)
+        val catColor = catColors[ModuleCategories.entries.indexOf(item.category) % catColors.size]
+        ctx.fill(x + 3, y + 3, x + 3 + 8, y + 3 + 8, catColor)
 
         // Category name
-        ctx.text(font, item.category.displayName, x + 15, y + 3,
+        val catName = if (item.category is Tagged) (item.category as Tagged).tag else item.category.name
+        ctx.text(font, catName, x + 15, y + 3,
             if (hovering) 0xFFAABBFF.toInt() else 0xFF8888BB.toInt(), false)
 
         // Module count
-        val count = ModuleManager.modules.count { it.category == item.category }
+        val count = ModuleManager.sortedBy { it.name }.count { it.category == item.category }
         val countText = "$count modules"
         ctx.text(font, countText, x + 15, y + 4 + font.lineHeight,
             0xFF555577.toInt(), false)
