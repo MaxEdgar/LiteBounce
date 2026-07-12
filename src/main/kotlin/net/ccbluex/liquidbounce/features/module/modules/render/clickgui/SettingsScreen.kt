@@ -172,12 +172,11 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                     }
                     context.text(font, displayName, rowX, itemY + 3, nameColor, false)
 
-                    // Separator line between name and control (only for non-groups)
+                    // Separator stub between name and control (only for non-groups)
                     if (!row.isGroup) {
-                        val sepX = rowX + font.width(displayName) + 4
-                        if (sepX + 4 < controlAreaX) {
-                            context.fill(sepX, itemY + itemH / 2, controlAreaX - 2, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
-                        }
+                        val sepX = rowX + font.width(displayName) + 6
+                        val sepStubW = 8
+                        context.fill(sepX, itemY + itemH / 2, sepX + sepStubW, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
 
                         // Render control
                         renderControl(context, row, controlAreaX, itemY, controlWidth, mouseX, mouseY)
@@ -272,7 +271,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             ControlType.BOOLEAN -> renderToggle(context, row.value as Value<Boolean>, x, y, w, mouseX, mouseY)
             ControlType.INT_SLIDER -> renderSlider(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY)
             ControlType.FLOAT_SLIDER -> renderSlider(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY)
-            ControlType.ENUM -> renderStepper(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY) { it.toString() }
+            ControlType.ENUM -> renderStepper(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY) { (it as ChoiceListValue<*>).get().toString() }
             ControlType.MULTI_ENUM -> renderMultiEnum(context, row.value as MultiChoiceListValue<*>, x, y, w)
             ControlType.TEXT -> renderText(context, row.value as Value<String>, x, y, w)
             ControlType.COLOR -> renderColor(context, row.value as Value<Color4b>, x, y, w)
@@ -496,8 +495,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         x: Int, y: Int, w: Int
     ) {
         val font = mc.font
-        val text = value.get().toString()
-        ctx.text(font, text, x + w - font.width(text), y + 3, 0xFF888899.toInt(), false)
+        val raw = value.get().toString()
+        // Guard against displaying raw Value.toString() format (e.g. "ChoiceListValue(name=X, type=Y)")
+        val display = if (raw.startsWith(value::class.simpleName + "(")) {
+            "<${value.valueType}>"
+        } else {
+            raw
+        }
+        ctx.text(font, display, x + w - font.width(display), y + 3, 0xFF888899.toInt(), false)
     }
 
     // Mouse click handling
