@@ -26,7 +26,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -34,27 +33,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends MixinScreen {
 
-    @Unique
-    private Button altManagerButton;
-
     @Inject(method = "init", at = @At("TAIL"))
     private void addAltManagerButton(CallbackInfo ci) {
         int x = 4;
         int y = this.height - 24;
 
-        altManagerButton = Button.builder(
+        var button = Button.builder(
                 Component.literal("Alt Manager"),
-                button -> Minecraft.getInstance().gui.setScreen(new AltManagerScreen())
+                btn -> Minecraft.getInstance().gui.setScreen(new AltManagerScreen())
         ).bounds(x, y, 80, 20).build();
 
-        addRenderableWidget(altManagerButton);
-    }
-
-    @Inject(method = "repositionElements", at = @At("TAIL"))
-    private void moveAltManagerButton(CallbackInfo ci) {
-        if (altManagerButton != null) {
-            altManagerButton.setPosition(4, this.height - 24);
-        }
+        addRenderableWidget(button);
     }
 
 }
