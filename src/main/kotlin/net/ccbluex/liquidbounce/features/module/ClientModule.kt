@@ -40,18 +40,18 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.TextColor
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -175,12 +175,14 @@ open class ClientModule(
             }
             notification(title, this.name, severity)
             chat(
-                regular("Toggled ") +
-                    highlight(this.name) +
-                    regular(" (") +
-                    regular(if (state) "ON" else "OFF")
-                        .withStyle(if (state) ChatFormatting.GREEN else ChatFormatting.RED) +
-                    regular(")"),
+                Component.literal("Toggled ").withStyle(ChatFormatting.GRAY)
+                    .append(this.name.asPlainText(
+                        Style.EMPTY.withColor(TextColor.fromRgb(Color4b.LIQUID_BOUNCE.argb)).withBold(true)
+                    ))
+                    .append(Component.literal(" (").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(if (state) "ON" else "OFF")
+                        .withStyle(if (state) ChatFormatting.GREEN else ChatFormatting.RED))
+                    .append(Component.literal(")").withStyle(ChatFormatting.GRAY)),
                 metadata = MessageMetadata.byModule(this)
             )
         }
