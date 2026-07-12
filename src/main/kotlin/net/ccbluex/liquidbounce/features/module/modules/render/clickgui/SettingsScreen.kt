@@ -711,13 +711,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             val scrollBarX = listX + listW + 3
             val scrollBarW = 10
             if (mx in scrollBarX..<scrollBarX + scrollBarW && my >= listStartY && my < listEndY) {
-                // Calculate how many rows to skip based on click position
-                val thumbH = ((listH.toFloat() / contentH.toFloat()) * listH).toInt().coerceAtLeast(20)
-                val scrollTrack = listH - thumbH
-                if (scrollTrack > 0) {
-                    val clickFraction = ((my - listStartY).toFloat() / scrollTrack).coerceIn(0f, 1f)
-                    scrollOffset = (-maxScroll * clickFraction).toInt().coerceIn(-maxScroll, 0)
-                }
+                // Jump to clicked position proportionally
+                val clickFraction = ((my - listStartY).toFloat() / listH).coerceIn(0f, 1f)
+                scrollOffset = (-maxScroll * clickFraction).toInt().coerceIn(-maxScroll, 0)
                 scrollBarGrabbed = true
                 scrollBarGrabY = my
                 scrollBarGrabOffset = scrollOffset
