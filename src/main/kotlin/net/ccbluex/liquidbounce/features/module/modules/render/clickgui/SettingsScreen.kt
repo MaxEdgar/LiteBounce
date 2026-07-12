@@ -709,8 +709,15 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
         if (maxScroll > 0) {
             val scrollBarX = listX + listW + 3
-            val scrollBarW = 8
-            if (mx in scrollBarX..<scrollBarX + scrollBarW) {
+            val scrollBarW = 10
+            if (mx in scrollBarX..<scrollBarX + scrollBarW && my >= listStartY && my < listEndY) {
+                // Calculate how many rows to skip based on click position
+                val thumbH = ((listH.toFloat() / contentH.toFloat()) * listH).toInt().coerceAtLeast(20)
+                val scrollTrack = listH - thumbH
+                if (scrollTrack > 0) {
+                    val clickFraction = ((my - listStartY).toFloat() / scrollTrack).coerceIn(0f, 1f)
+                    scrollOffset = (-maxScroll * clickFraction).toInt().coerceIn(-maxScroll, 0)
+                }
                 scrollBarGrabbed = true
                 scrollBarGrabY = my
                 scrollBarGrabOffset = scrollOffset
@@ -774,22 +781,16 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             }
             ControlType.ENUM -> {
                 val value = row.value as ChoiceListValue<*>
-                val btnSize = rowHeight - 4
-                val btnY = y + 2
-                val decX = x
-                val incX = x + w - btnSize
                 val options = value.choices.toList()
                 if (options.isNotEmpty()) {
                     val currentIdx = options.indexOf(value.get())
-                    val onLeftBtn = mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize
-                    val onRightBtn = mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize
-                    val onText = mouseX in decX + btnSize..<incX && mouseY in y..<y + rowHeight
-
-                    if (onLeftBtn) {
+                    // Click on left half of control = previous, right half = next
+                    val midX = x + w / 2
+                    if (mouseX < midX) {
                         val newIdx = if (currentIdx <= 0) options.size - 1 else currentIdx - 1
                         @Suppress("UNCHECKED_CAST")
                         value.set(options[newIdx] as Nothing)
-                    } else if (onRightBtn || onText) {
+                    } else {
                         val newIdx = if (currentIdx >= options.size - 1) 0 else currentIdx + 1
                         @Suppress("UNCHECKED_CAST")
                         value.set(options[newIdx] as Nothing)
@@ -817,21 +818,15 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             }
             ControlType.MODE_GROUP -> {
                 val value = row.value as ModeValueGroup<*>
-                val btnSize = rowHeight - 4
-                val btnY = y + 2
-                val decX = x
-                val incX = x + w - btnSize
                 val modeNames = value.modes.map { it.tag }
                 if (modeNames.isNotEmpty()) {
                     val currentIdx = modeNames.indexOf(value.activeMode.tag)
-                    val onLeftBtn = mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize
-                    val onRightBtn = mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize
-                    val onText = mouseX in decX + btnSize..<incX && mouseY in y..<y + rowHeight
-
-                    if (onLeftBtn) {
+                    // Click on left half of control = previous, right half = next
+                    val midX = x + w / 2
+                    if (mouseX < midX) {
                         val newIdx = if (currentIdx <= 0) modeNames.size - 1 else currentIdx - 1
                         value.setByString(modeNames[newIdx])
-                    } else if (onRightBtn || onText) {
+                    } else {
                         val newIdx = if (currentIdx >= modeNames.size - 1) 0 else currentIdx + 1
                         value.setByString(modeNames[newIdx])
                     }
@@ -865,8 +860,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
         val geo = computeSliderGeometry(value, x, y, w) ?: return
 
-        // Check if click is on the slider track
-        if (mouseY in geo.sliderY..<geo.sliderY + geo.sliderH && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
+        // Check if click is on the slider track (generous vertical zone - entire row)
+        if (mouseY in y..<y + rowHeight && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
             val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
             val newVal = min + fraction * (max - min)
             @Suppress("UNCHECKED_CAST")
@@ -900,8 +895,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val maxSliderX = x + leftW + gap
         val rightW = w - leftW - gap
 
-        // Check min slider
-        if (mouseY in sliderY..<sliderY + sliderH && mouseX >= minSliderX && mouseX < minSliderX + leftW) {
+        // Check min slider (generous vertical zone - entire row)
+        if (mouseY in y..<y + rowHeight && mouseX >= minSliderX && mouseX < minSliderX + leftW) {
             val fraction = ((mouseX - minSliderX).toFloat() / leftW).coerceIn(0f, 1f)
             val newMin = cMin + fraction * (cMax - cMin)
             val maxVal = (rangeVal.endInclusive as Number).toDouble()
@@ -917,8 +912,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             return
         }
 
-        // Check max slider
-        if (mouseY in sliderY..<sliderY + sliderH && mouseX >= maxSliderX && mouseX < maxSliderX + rightW) {
+        // Check max slider (generous vertical zone - entire row)
+        if (mouseY in y..<y + rowHeight && mouseX >= maxSliderX && mouseX < maxSliderX + rightW) {
             val fraction = ((mouseX - maxSliderX).toFloat() / rightW).coerceIn(0f, 1f)
             val newMax = cMin + fraction * (cMax - cMin)
             val minVal = (rangeVal.start as Number).toDouble()

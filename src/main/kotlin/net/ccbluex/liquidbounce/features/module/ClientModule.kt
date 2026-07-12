@@ -45,13 +45,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.TextColor
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -176,9 +174,7 @@ open class ClientModule(
             notification(title, this.name, severity)
             chat(
                 Component.literal("Toggled ").withStyle(ChatFormatting.GRAY)
-                    .append(this.name.asPlainText(
-                        Style.EMPTY.withColor(TextColor.fromRgb(Color4b.LIQUID_BOUNCE.argb)).withBold(true)
-                    ))
+                    .append(this.name.asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD))
                     .append(Component.literal(" (").withStyle(ChatFormatting.GRAY))
                     .append(Component.literal(if (state) "ON" else "OFF")
                         .withStyle(if (state) ChatFormatting.GREEN else ChatFormatting.RED))
