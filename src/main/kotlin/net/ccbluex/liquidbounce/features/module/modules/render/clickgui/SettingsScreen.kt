@@ -195,7 +195,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 }
             }
 
-            val colorExtra = if (colorPickerEditing?.value === row.value) 62 else 0
+            val colorExtra = if (colorPickerEditing === row.value) 62 else 0
             currentY += itemH + 1 + colorExtra
         }
 
@@ -709,7 +709,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
         if (maxScroll > 0) {
             val scrollBarX = listX + listW + 3
-            val scrollBarW = 6
+            val scrollBarW = 8
             if (mx in scrollBarX..<scrollBarX + scrollBarW) {
                 scrollBarGrabbed = true
                 scrollBarGrabY = my
