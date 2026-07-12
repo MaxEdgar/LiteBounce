@@ -679,11 +679,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val max = (range.endInclusive as Number).toDouble()
         if (max - min <= 0.0) return
 
-        val listX = width / 4
-        val listW = width / 2
-        val controlAreaX = listX + listW * 3 / 5 + 4
-        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
-        val geo = computeSliderGeometry(value, controlAreaX, row.y, controlWidth) ?: return
+        val geo = computeSliderGeometry(value, x, y, w) ?: return
 
         // Check if click is on the slider track
         if (mouseY in geo.sliderY..<geo.sliderY + geo.sliderH && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
