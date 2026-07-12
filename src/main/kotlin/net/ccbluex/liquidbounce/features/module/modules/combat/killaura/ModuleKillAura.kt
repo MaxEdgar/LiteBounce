@@ -90,9 +90,18 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val keepSprint by boolean("KeepSprint", true)
 
     // Priority
-    private val priority by choices("Priority", arrayOf("Health", "Distance", "Direction", "HurtTime", "Armor"), "Distance")
-    private val targetMode by choices("TargetMode", arrayOf("Single", "Switch", "Multi"), "Single")
-    private val switchDelay by int("SwitchDelay", 15, 1..100, "ticks") { targetMode == "Switch" }
+    private enum class KillAuraPriority(override val tag: String) : Tagged {
+        HEALTH("Health"), DISTANCE("Distance"), DIRECTION("Direction"), HURT_TIME("HurtTime"), ARMOR("Armor")
+    }
+    private enum class KillAuraTargetMode(override val tag: String) : Tagged {
+        SINGLE("Single"), SWITCH("Switch"), MULTI("Multi")
+    }
+
+    private val priority by enumChoice("Priority", KillAuraPriority.DISTANCE)
+    private val targetMode by enumChoice("TargetMode", KillAuraTargetMode.SINGLE)
+    private val switchDelay by int("SwitchDelay", 15, 1..100, "ticks")
+    private val isSwitchMode: Boolean
+        get() = targetMode == KillAuraTargetMode.SWITCH
 
     // Inventory
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -125,7 +134,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         clicks = 0
         attackTimer.reset()
         previousTargetIds.clear()
-        KillAuraAutoBlock.stopBlocking(force = true)
+        KillAuraAutoBlock.stopBlocking()
     }
 
     val shouldBlockSprinting
@@ -226,7 +235,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         KillAuraAutoBlock.startBlocking()
 
-        if (targetMode == "Switch") {
+        if (isSwitchMode) {
             if (switchTimer++ >= switchDelay) {
                 previousTargetIds.add(currentTarget.id)
                 switchTimer = 0
@@ -246,20 +255,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         for (entity in world.entitiesForRendering()) {
             if (entity !is LivingEntity || !entity.shouldBeAttacked()) continue
-            if (targetMode == "Switch" && entity.id in previousTargetIds) continue
+            if (isSwitchMode && entity.id in previousTargetIds) continue
 
             val distance = player.boxedDistanceTo(entity).toFloat()
             val entityFov = crosshairAngleToEntity(entity)
 
             if (distance > maxRange || fov != 180f && entityFov > fov) continue
 
-            val currentValue = when (priority.lowercase()) {
-                "distance" -> distance.toDouble()
-                "health" -> entity.health.toDouble()
-                "direction" -> entityFov.toDouble()
-                "hurttime" -> entity.hurtTime.toDouble()
-                "armor" -> entity.armorValue.toDouble()
-                else -> distance.toDouble()
+            val currentValue = when (priority) {
+                KillAuraPriority.DISTANCE -> distance.toDouble()
+                KillAuraPriority.HEALTH -> entity.health.toDouble()
+                KillAuraPriority.DIRECTION -> entityFov.toDouble()
+                KillAuraPriority.HURT_TIME -> entity.hurtTime.toDouble()
+                KillAuraPriority.ARMOR -> entity.armorValue.toDouble()
             }
 
             if (currentValue < bestValue) {
@@ -307,7 +315,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val pitch = Mth.atan2(-delta.y, kotlin.math.sqrt(delta.x * delta.x + delta.z * delta.z))
         val yawDiff = abs(Mth.wrapDegrees(rotation.yaw - yaw))
         val pitchDiff = abs(Mth.wrapDegrees(rotation.pitch - pitch))
-        return max(yawDiff, pitchDiff)
+        return max(yawDiff, pitchDiff).toFloat()
     }
 
     /** Generate a random click delay from the CPS range (like legacy MSTimer) */
