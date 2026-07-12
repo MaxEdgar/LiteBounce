@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -45,7 +45,7 @@ class SearchOverlay : Screen(Component.literal("")) {
     private val itemHeight = 14
     private val categoryHeaderH = 16
 
-    /** Persistent expanded categories (maps category name -> expanded) */
+    /** Persistent expanded categories (maps category tag -> expanded) */
     private val expandedCategories = hashMapOf<String, Boolean>()
 
     /** Whether we're in flat-search mode (when user types) */
@@ -61,7 +61,6 @@ class SearchOverlay : Screen(Component.literal("")) {
         val sw = width
         val sh = height
 
-        // Semi-transparent dark overlay background
         context.fill(0, 0, sw, sh, 0xCC111111.toInt())
 
         val searchBarX = sw / 4
@@ -75,10 +74,7 @@ class SearchOverlay : Screen(Component.literal("")) {
     private fun renderSearchBar(context: GuiGraphicsExtractor, x: Int, y: Int, w: Int, mouseX: Int, mouseY: Int) {
         val font = mc.font
 
-        // Search bar background
         context.fill(x, y, x + w, y + searchBarHeight, 0xFF222222.toInt())
-
-        // Bottom border accent
         context.fill(x, y + searchBarHeight, x + w, y + searchBarHeight + 1, 0xFF444444.toInt())
 
         val textY = y + (searchBarHeight - font.lineHeight) / 2
@@ -93,20 +89,18 @@ class SearchOverlay : Screen(Component.literal("")) {
     /** Get visible items: either categories+modules (browse) or flat list (search) */
     private fun getVisibleItems(): List<VisibleItem> {
         if (isSearching) {
-            // Flat list of matching modules
             return ModuleManager.sortedBy { it.name }
                 .filter { it.name.contains(searchQuery, ignoreCase = true) }
                 .map { VisibleItem.ModuleItem(it) }
         }
-        // Group by category, only show expanded ones
         val items = mutableListOf<VisibleItem>()
-        val categoriesWithModules = ModuleManager.groupBy { it.category }
-            .toSortedMap(compareBy { it.displayName })
+        val cats = ModuleCategories.categories()
 
-        for ((category, modules) in categoriesWithModules) {
-            val sorted = modules.sortedBy { it.name }
-            val expanded = expandedCategories.getOrPut(category.name) { false }
-            items.add(VisibleItem.CategoryHeader(category, expanded))
+        for (cat in cats) {
+            val sorted = ModuleManager.sortedBy { it.name }.filter { it.category == cat }
+            if (sorted.isEmpty()) continue
+            val expanded = expandedCategories.getOrPut(cat.tag) { false }
+            items.add(VisibleItem.CategoryHeader(cat, expanded))
 
             if (expanded) {
                 for (module in sorted) {
@@ -118,7 +112,6 @@ class SearchOverlay : Screen(Component.literal("")) {
     }
 
     private fun renderModuleList(context: GuiGraphicsExtractor, x: Int, startY: Int, w: Int, mouseX: Int, mouseY: Int) {
-        val font = mc.font
         val items = getVisibleItems()
 
         var currentY = startY + scrollOffset
@@ -153,20 +146,23 @@ class SearchOverlay : Screen(Component.literal("")) {
         ctx.fill(x, y, x + w, y + categoryHeaderH, bgColor)
         ctx.fill(x, y + categoryHeaderH, x + w, y + categoryHeaderH + 1, 0xFF2A2A55.toInt())
 
-        // Category icon (small colored square)
-        val catColors = intArrayOf(0xFF4488FF, 0xFF44FF88, 0xFFFF8844, 0xFFFF4488, 0xFF88FF44, 0xFF8844FF, 0xFF44FFFF, 0xFFFF44FF)
-        val catColor = catColors[ModuleCategories.entries.indexOf(item.category) % catColors.size]
+        // Category icon
+        val catColors = intArrayOf(
+            0xFF4488FF.toInt(), 0xFF44FF88.toInt(), 0xFFFF8844.toInt(),
+            0xFFFF4488.toInt(), 0xFF88FF44.toInt(), 0xFF8844FF.toInt(),
+            0xFF44FFFF.toInt(), 0xFFFF44FF.toInt()
+        )
+        val catIdx = catsList.indexOf(item.category)
+        val catColor = catColors[if (catIdx < 0) 0 else catIdx % catColors.size]
         ctx.fill(x + 3, y + 3, x + 3 + 8, y + 3 + 8, catColor)
 
         // Category name
-        val catName = if (item.category is Tagged) (item.category as Tagged).tag else item.category.name
-        ctx.text(font, catName, x + 15, y + 3,
+        ctx.text(font, item.category.tag, x + 15, y + 3,
             if (hovering) 0xFFAABBFF.toInt() else 0xFF8888BB.toInt(), false)
 
         // Module count
         val count = ModuleManager.sortedBy { it.name }.count { it.category == item.category }
-        val countText = "$count modules"
-        ctx.text(font, countText, x + 15, y + 4 + font.lineHeight,
+        ctx.text(font, "$count modules", x + 15, y + 4 + font.lineHeight,
             0xFF555577.toInt(), false)
 
         // Expand/collapse arrow
@@ -186,7 +182,6 @@ class SearchOverlay : Screen(Component.literal("")) {
         val arrowX = x + w - 12
         val arrowHover = hovering && mouseX >= arrowX
 
-        // Module item background
         val bgColor = when {
             module.enabled && arrowHover && hasSettings -> 0xFF4A7A37.toInt()
             module.enabled && hovering -> 0xFF3A6A27.toInt()
@@ -196,11 +191,9 @@ class SearchOverlay : Screen(Component.literal("")) {
         }
         ctx.fill(x, y, x + w, y + itemHeight, bgColor)
 
-        // Module name text color
         val nameColor = if (module.enabled) 0xFF66FF66.toInt() else 0xFFF0F0F0.toInt()
         ctx.text(font, module.name, x + 8, y + 2, nameColor, false)
 
-        // Settings arrow (>) if module has settings
         if (hasSettings) {
             val arrowColor = if (arrowHover) 0xFFFFAA00.toInt() else 0xFF555555.toInt()
             ctx.text(font, ">", arrowX, y + 2, arrowColor, false)
@@ -231,8 +224,7 @@ class SearchOverlay : Screen(Component.literal("")) {
                 when (item) {
                     is VisibleItem.CategoryHeader -> {
                         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                            // Toggle expansion: click anywhere on the header
-                            expandedCategories[item.category.name] = !item.expanded
+                            expandedCategories[item.category.tag] = !item.expanded
                             return true
                         }
                     }
@@ -241,14 +233,12 @@ class SearchOverlay : Screen(Component.literal("")) {
                         val hasSettings = module.inner.isNotEmpty()
                         val arrowX = searchBarX + searchBarW - 12
 
-                        // Left click on > arrow or right click anywhere -> open settings
                         if ((button == GLFW.GLFW_MOUSE_BUTTON_LEFT && hasSettings && mouseX >= arrowX) ||
                             (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && hasSettings)) {
                             mc.gui.setScreen(SettingsScreen(module))
                             return true
                         }
 
-                        // Left click on module body -> toggle
                         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                             module.enabled = !module.enabled
                             return true
@@ -313,10 +303,13 @@ class SearchOverlay : Screen(Component.literal("")) {
         super.onClose()
     }
 
-    /** Represents an item visible in the module list */
     private sealed class VisibleItem {
-        data class CategoryHeader(val category: ModuleCategories, val expanded: Boolean) : VisibleItem()
+        data class CategoryHeader(val category: ModuleCategory, val expanded: Boolean) : VisibleItem()
         data class ModuleItem(val module: ClientModule) : VisibleItem()
+    }
+
+    companion object {
+        private val catsList = ModuleCategories.entries.toList()
     }
 
 }
