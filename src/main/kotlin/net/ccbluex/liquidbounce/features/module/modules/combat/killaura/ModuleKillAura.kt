@@ -325,6 +325,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         return if (maxMs <= minMs) minMs else Random.nextInt(minMs, maxMs)
     }
 
+    @Suppress("FunctionOnlyReturningConstant")
     private fun shouldPrioritize(): Boolean = false
 
     private val maxRange: Float
