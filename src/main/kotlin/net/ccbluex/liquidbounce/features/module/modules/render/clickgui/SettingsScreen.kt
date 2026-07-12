@@ -143,7 +143,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         for ((index, row) in settingRows.withIndex()) {
             row.y = currentY
             val isPlainHeader = row.isGroup && row.isTopLevel && row.type == ControlType.NONE
-            val itemH = if (isPlainHeader) headerH else rowHeight                    if (currentY + itemH >= listStartY - itemH && currentY < listEndY) {
+            val itemH = if (isPlainHeader) headerH else rowHeight
+
+            if (currentY + itemH >= listStartY - itemH && currentY < listEndY) {
                 val itemY = currentY
                 val hovering = mouseX >= listX && mouseY >= itemY &&
                     mouseX < listX + listW && mouseY < itemY + itemH
@@ -928,87 +930,78 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
-    /** Update a slider value based on mouse position during drag */
+    /** Update a normal or range slider value based on mouse position during drag */
     private fun updateSliderDrag(mouseX: Int, mouseY: Int) {
         val listX = width / 4
         val listW = width / 2
         val controlAreaX = listX + listW * 3 / 5 + 4
         val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(80)
 
-        // Handle range slider drag
-        if (rangeSliderDraggingRow != null) {
-            val row = rangeSliderDraggingRow ?: return
-            val value = row.value as? RangedValue<*> ?: return
-            val isMin = rangeSliderDraggingIsMin
+        // Dispatch to either range slider or normal slider
+        val row = rangeSliderDraggingRow ?: sliderDraggingRow ?: return
+        val value = row.value as? RangedValue<*> ?: return
 
-            val rangeVal = value.get()
-            if (rangeVal !is ClosedRange<*>) return
+        if (row === rangeSliderDraggingRow) {
+            updateRangeSliderDrag(value, row, mouseX, mouseY, controlAreaX, controlWidth)
+        } else {
+            updateNormalSliderDrag(value, row, mouseX, mouseY, controlAreaX, controlWidth)
+        }
+    }
 
-            val constraint = value.range
-            val cMin = (constraint.start as Number).toDouble()
-            val cMax = (constraint.endInclusive as Number).toDouble()
-            if (cMax - cMin <= 0.0) return
+    private fun updateRangeSliderDrag(value: RangedValue<*>, row: SettingRow, mouseX: Int, mouseY: Int, x: Int, w: Int) {
+        val rangeVal = value.get()
+        if (rangeVal !is ClosedRange<*>) return
+        val constraint = value.range
+        val cMin = (constraint.start as Number).toDouble()
+        val cMax = (constraint.endInclusive as Number).toDouble()
+        if (cMax - cMin <= 0.0) return
 
-            val x = controlAreaX
-            val y = row.y
-            val w = controlWidth
+        val sliderH = 8
+        val sliderY = row.y + 4
+        val gap = 12
+        val leftW = (w - gap) / 2
+        val minSliderX = x
+        val maxSliderX = x + leftW + gap
+        val rightW = w - leftW - gap
 
-            val sliderH = 8
-            val sliderY = y + 4
-            val gap = 12
-            val leftW = (w - gap) / 2
+        val isMin = rangeSliderDraggingIsMin
+        val (sliderX, sliderWidth) = if (isMin) minSliderX to leftW else maxSliderX to rightW
 
-            val minSliderX = x
-            val maxSliderX = x + leftW + gap
-            val rightW = w - leftW - gap
+        val fraction = ((mouseX - sliderX).toFloat() / sliderWidth).coerceIn(0f, 1f)
+        val newValue = cMin + fraction * (cMax - cMin)
 
-            if (isMin) {
-                val fraction = ((mouseX - minSliderX).toFloat() / leftW).coerceIn(0f, 1f)
-                val newMin = cMin + fraction * (cMax - cMin)
-                val maxVal = (rangeVal.endInclusive as Number).toDouble()
-                val clampedMin = newMin.coerceAtMost(maxVal)
-                val newRange = if (rangeVal.start is Float)
-                    clampedMin.toFloat()..maxVal.toFloat()
-                else
-                    clampedMin.toInt()..maxVal.toInt()
-                @Suppress("UNCHECKED_CAST")
-                value.set(newRange as Nothing)
-            } else {
-                val fraction = ((mouseX - maxSliderX).toFloat() / rightW).coerceIn(0f, 1f)
-                val newMax = cMin + fraction * (cMax - cMin)
-                val minVal = (rangeVal.start as Number).toDouble()
-                val clampedMax = newMax.coerceAtLeast(minVal)
-                val newRange = if (rangeVal.start is Float)
-                    minVal.toFloat()..clampedMax.toFloat()
-                else
-                    minVal.toInt()..clampedMax.toInt()
-                @Suppress("UNCHECKED_CAST")
-                value.set(newRange as Nothing)
-            }
-            return
+        val minVal = (rangeVal.start as Number).toDouble()
+        val maxVal = (rangeVal.endInclusive as Number).toDouble()
+        val (clampedMin, clampedMax) = if (isMin) {
+            newValue.coerceAtMost(maxVal) to maxVal
+        } else {
+            minVal to newValue.coerceAtLeast(minVal)
         }
 
-        // Handle normal slider drag
-        val row = sliderDraggingRow ?: return
-        val value = row.value as? RangedValue<*> ?: return
+        val newRange = if (rangeVal.start is Float)
+            clampedMin.toFloat()..clampedMax.toFloat()
+        else
+            clampedMin.toInt()..clampedMax.toInt()
+        @Suppress("UNCHECKED_CAST")
+        value.set(newRange as Nothing)
+    }
+
+    private fun updateNormalSliderDrag(value: RangedValue<*>, row: SettingRow, mouseX: Int, mouseY: Int, x: Int, w: Int) {
         val range = value.range
         val min = (range.start as Number).toDouble()
         val max = (range.endInclusive as Number).toDouble()
         if (max - min <= 0.0) return
 
-        val geo = computeSliderGeometry(value, controlAreaX, row.y, controlWidth) ?: return
+        val geo = computeSliderGeometry(value, x, row.y, w) ?: return
 
         if (mouseY in (geo.sliderY - 4)..<(geo.sliderY + geo.sliderH + 4) && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
             val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
             val newVal = min + fraction * (max - min)
             @Suppress("UNCHECKED_CAST")
-            fun setSliderValue(v: RangedValue<*>, nv: Double) {
-                when {
-                    v.range.start is Int -> v.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()) as Nothing)
-                    v.range.start is Float -> v.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()) as Nothing)
-                }
+            when {
+                value.range.start is Int -> value.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()) as Nothing)
+                value.range.start is Float -> value.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()) as Nothing)
             }
-            setSliderValue(value, newVal)
         }
     }
 
