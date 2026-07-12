@@ -497,7 +497,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val font = mc.font
         val raw = value.get().toString()
         // Guard against displaying raw Value.toString() format (e.g. "ChoiceListValue(name=X, type=Y)")
-        val display = if (raw.startsWith(value::class.simpleName + "(")) {
+        val display = if ((value::class.simpleName ?: "").let { raw.startsWith("$it(") }) {
             "<${value.valueType}>"
         } else {
             raw
