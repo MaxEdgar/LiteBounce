@@ -61,9 +61,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     private val settingRows = mutableListOf<SettingRow>()
     private var rowsDirty = true
 
-    private val rowHeight = 16
+    private val rowHeight = 18
     private val indent = 10
-    private val headerH = 14
+    private val headerH = 16
 
     private val backButtonX = 6
     private val backButtonY = 6
@@ -195,13 +195,14 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 }
             }
 
-            currentY += itemH + 1
+            val colorExtra = if (colorPickerEditing?.value === row.value) 62 else 0
+            currentY += itemH + 1 + colorExtra
         }
 
         // Scrollbar - wider and more visible
         if (maxScroll > 0) {
             val scrollBarX = listX + listW + 3
-            val scrollBarW = 6
+            val scrollBarW = 8
             // Thumb proportional height
             val thumbH = ((listH.toFloat() / contentH.toFloat()) * listH).toInt().coerceAtLeast(20)
             val scrollTrack = listH - thumbH
@@ -217,9 +218,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             // Thumb
             val thumbHover = mouseX in scrollBarX..<scrollBarX + scrollBarW && mouseY in thumbY..<thumbY + thumbH
             context.fill(scrollBarX, thumbY, scrollBarX + scrollBarW, thumbY + thumbH,
-                if (thumbHover) 0xFF6666BB.toInt() else 0xFF3A3A77.toInt())
+                if (thumbHover) 0xFF8888DD.toInt() else 0xFF3A3A77.toInt())
             // Thumb highlight
-            context.fill(scrollBarX + 1, thumbY, scrollBarX + scrollBarW - 1, thumbY + 1, 0xFF5555AA.toInt())
+            context.fill(scrollBarX + 1, thumbY, scrollBarX + scrollBarW - 2, thumbY + 1, 0xFF5555AA.toInt())
         }
     }
 
@@ -581,7 +582,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             if (isListening) 0xFFFFDD44.toInt() else 0xFFDDDDEE.toInt(), false)
     }
 
-    /** Dual mini-slider for int/float range values (e.g. CPS 5-8) */
+    /** Clean dual-slider for int/float range values with inline value text */
     private fun renderRangeSlider(
         ctx: GuiGraphicsExtractor, value: RangedValue<*>,
         x: Int, y: Int, w: Int, mouseX: Int, mouseY: Int
@@ -598,15 +599,21 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val cMax = (constraint.endInclusive as Number).toDouble()
         if (cMax - cMin <= 0.0) return
 
-        val sliderH = 8
-        val sliderY = y + 4
-        val gap = 12
-        val labelW = font.width("Min")
+        val sliderH = 6
+        val sliderY = y + 8
+        val gap = 10
         val leftW = (w - gap) / 2
         val rightW = w - leftW - gap
 
         val minSliderX = x
         val maxSliderX = x + leftW + gap
+
+        // --- Value text (above sliders, clean alignment) ---
+        val minText = if (rangeVal.start is Float) String.format("%.1f", minVal) else minVal.toInt().toString()
+        val maxText = if (rangeVal.endInclusive is Float) String.format("%.1f", maxVal) else maxVal.toInt().toString()
+        ctx.text(font, minText, minSliderX, y + 1, 0xFF8888AA.toInt(), false)
+        ctx.text(font, "-", minSliderX + font.width(minText) + 2, y + 1, 0xFF555577.toInt(), false)
+        ctx.text(font, maxText, minSliderX + font.width(minText) + 2 + font.width("-") + 2, y + 1, 0xFF8888AA.toInt(), false)
 
         // --- Min slider ---
         val minFrac = ((minVal - cMin) / (cMax - cMin)).toFloat().coerceIn(0f, 1f)
@@ -614,21 +621,17 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val isDraggingMin = rangeSliderDraggingRow?.value === value && rangeSliderDraggingIsMin
         val hoverMin = mouseY in sliderY..<sliderY + sliderH && mouseX >= minSliderX && mouseX < minSliderX + leftW
 
-        ctx.text(font, "Min", minSliderX, y + 2, 0xFF8888AA.toInt(), false)
         ctx.fill(minSliderX, sliderY, minSliderX + leftW, sliderY + sliderH, 0xFF222233.toInt())
         if (minFrac > 0f) {
             ctx.fill(minSliderX, sliderY, minEnd, sliderY + sliderH, 0xFF2D5A27.toInt())
         }
-        val thumbS = 6
+        val thumbS = 5
         val minThumbX = (minEnd - thumbS / 2).coerceIn(minSliderX, minSliderX + leftW - thumbS)
         ctx.fill(minThumbX, sliderY - 1, minThumbX + thumbS, sliderY + sliderH + 2,
             if (hoverMin || isDraggingMin) 0xFF66CC66.toInt() else 0xFF44AA44.toInt())
 
-        val minText = if (rangeVal.start is Float) String.format("%.1f", minVal) else minVal.toInt().toString()
-        ctx.text(font, minText, minSliderX + leftW + 1, y + 3, 0xFFDDDDEE.toInt(), false)
-
         // --- Dash separator ---
-        ctx.text(font, "-", x + leftW, y + 3, 0xFF666688.toInt(), false)
+        ctx.fill(minSliderX + leftW + 2, sliderY + 1, maxSliderX - 2, sliderY + sliderH - 1, 0xFF222233.toInt())
 
         // --- Max slider ---
         val maxFrac = ((maxVal - cMin) / (cMax - cMin)).toFloat().coerceIn(0f, 1f)
@@ -636,7 +639,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val isDraggingMax = rangeSliderDraggingRow?.value === value && !rangeSliderDraggingIsMin
         val hoverMax = mouseY in sliderY..<sliderY + sliderH && mouseX >= maxSliderX && mouseX < maxSliderX + rightW
 
-        ctx.text(font, "Max", maxSliderX, y + 2, 0xFF8888AA.toInt(), false)
         ctx.fill(maxSliderX, sliderY, maxSliderX + rightW, sliderY + sliderH, 0xFF222233.toInt())
         if (maxFrac > 0f) {
             ctx.fill(maxSliderX, sliderY, maxEnd, sliderY + sliderH, 0xFF2D5A27.toInt())
@@ -644,9 +646,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val maxThumbX = (maxEnd - thumbS / 2).coerceIn(maxSliderX, maxSliderX + rightW - thumbS)
         ctx.fill(maxThumbX, sliderY - 1, maxThumbX + thumbS, sliderY + sliderH + 2,
             if (hoverMax || isDraggingMax) 0xFF66CC66.toInt() else 0xFF44AA44.toInt())
-
-        val maxText = if (rangeVal.endInclusive is Float) String.format("%.1f", maxVal) else maxVal.toInt().toString()
-        ctx.text(font, maxText, maxSliderX + rightW + 1, y + 3, 0xFFDDDDEE.toInt(), false)
     }
 
     private fun renderNone(
@@ -734,7 +733,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             val listX = width / 4
             val listW = width / 2
             val controlAreaX = listX + listW * 3 / 5 + 4
-            val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
+            val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(80)
             handled = checkSettingRowClick(mx, my, controlAreaX, controlWidth) ||
                 checkScrollbarClick(mx, my)
         }
@@ -892,9 +891,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val cMax = (constraint.endInclusive as Number).toDouble()
         if (cMax - cMin <= 0.0) return
 
-        val sliderH = 8
-        val sliderY = y + 4
-        val gap = 12
+        val sliderH = 6
+        val sliderY = y + 8
+        val gap = 10
         val leftW = (w - gap) / 2
 
         val minSliderX = x
@@ -962,9 +961,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val cMax = (constraint.endInclusive as Number).toDouble()
         if (cMax - cMin <= 0.0) return
 
-        val sliderH = 8
-        val sliderY = row.y + 4
-        val gap = 12
+        val sliderH = 6
+        val sliderY = row.y + 8
+        val gap = 10
         val leftW = (w - gap) / 2
         val minSliderX = x
         val maxSliderX = x + leftW + gap
