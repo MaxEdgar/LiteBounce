@@ -71,7 +71,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         // No blur
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod", "NestedBlockDepth")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "NestedBlockDepth", "BracesOnIfStatements")
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTicks: Float) {
         val sw = width
         val sh = height
@@ -683,7 +683,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         return super.mouseReleased(context)
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "BracesOnIfStatements")
     private fun handleControlClick(row: SettingRow, mouseX: Int, mouseY: Int, controlAreaX: Int, controlWidth: Int): Boolean {
         val x = controlAreaX
         val y = row.y
