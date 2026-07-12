@@ -38,10 +38,14 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -170,6 +174,15 @@ open class ClientModule(
                 translation("liquidbounce.generic.disabled") to NotificationEvent.Severity.DISABLED
             }
             notification(title, this.name, severity)
+            chat(
+                regular("Toggled ") +
+                    highlight(this.name) +
+                    regular(" (") +
+                    regular(if (state) "ON" else "OFF")
+                        .withStyle(if (state) ChatFormatting.GREEN else ChatFormatting.RED) +
+                    regular(")"),
+                metadata = MessageMetadata.byModule(this)
+            )
         }
 
         EventManager.callEvent(ModuleToggleEvent(name, hidden, state))

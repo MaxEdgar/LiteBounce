@@ -59,6 +59,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     private var rangeSliderDraggingIsMin: Boolean = false
 
     private val settingRows = mutableListOf<SettingRow>()
+    private var rowsDirty = true
 
     private val rowHeight = 16
     private val indent = 10
@@ -121,8 +122,11 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val topBarH = backButtonH + 11 + if (showDesc) font.lineHeight + 3 else 8
 
         // Build setting rows
-        settingRows.clear()
-        buildRows(module.inner, 0, isTopLevel = true)
+        if (rowsDirty) {
+            settingRows.clear()
+            buildRows(module.inner, 0, isTopLevel = true)
+            rowsDirty = false
+        }
 
         // Scroll calculations
         val listStartY = topBarH
@@ -809,6 +813,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 val value = row.value as ToggleableValueGroup
                 val enabledValue = value.inner.find { it.name == "Enabled" } as? Value<Boolean>
                 enabledValue?.let { it.set(!it.get()) }
+                rowsDirty = true
                 true
             }
             ControlType.MODE_GROUP -> {
@@ -832,6 +837,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                         value.setByString(modeNames[newIdx])
                     }
                 }
+                rowsDirty = true
                 true
             }
             ControlType.BIND -> {

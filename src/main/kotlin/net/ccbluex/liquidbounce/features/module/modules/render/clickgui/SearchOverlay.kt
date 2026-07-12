@@ -48,6 +48,9 @@ class SearchOverlay : Screen(Component.literal("")) {
     /** Persistent expanded categories (maps category tag -> expanded) */
     private val expandedCategories = hashMapOf<String, Boolean>()
 
+    /** Cached sorted module list (doesn't change at runtime) */
+    private val allModulesSorted by lazy { ModuleManager.sortedBy { it.name } }
+
     /** Whether we're in flat-search mode (when user types) */
     private val isSearching get() = searchQuery.isNotEmpty()
 
@@ -88,8 +91,9 @@ class SearchOverlay : Screen(Component.literal("")) {
 
     /** Get visible items: either categories+modules (browse) or flat list (search) */
     private fun getVisibleItems(): List<VisibleItem> {
+        val allSorted = allModulesSorted
         if (isSearching) {
-            return ModuleManager.sortedBy { it.name }
+            return allSorted
                 .filter { it.name.contains(searchQuery, ignoreCase = true) }
                 .map { VisibleItem.ModuleItem(it) }
         }
@@ -97,13 +101,13 @@ class SearchOverlay : Screen(Component.literal("")) {
         val cats = ModuleCategories.entries
 
         for (cat in cats) {
-            val sorted = ModuleManager.sortedBy { it.name }.filter { it.category == cat }
-            if (sorted.isEmpty()) continue
+            val modules = allSorted.filter { it.category == cat }
+            if (modules.isEmpty()) continue
             val expanded = expandedCategories.getOrPut(cat.tag) { false }
-            items.add(VisibleItem.CategoryHeader(cat, expanded))
+            items.add(VisibleItem.CategoryHeader(cat, expanded, modules.size))
 
             if (expanded) {
-                for (module in sorted) {
+                for (module in modules) {
                     items.add(VisibleItem.ModuleItem(module))
                 }
             }
@@ -160,9 +164,8 @@ class SearchOverlay : Screen(Component.literal("")) {
         ctx.text(font, item.category.tag, x + 15, y + 3,
             if (hovering) 0xFFAABBFF.toInt() else 0xFF8888BB.toInt(), false)
 
-        // Module count
-        val count = ModuleManager.sortedBy { it.name }.count { it.category == item.category }
-        ctx.text(font, "$count modules", x + 15, y + 12,
+        // Module count (precomputed, cached)
+        ctx.text(font, "${item.moduleCount} modules", x + 15, y + 12,
             0xFF555577.toInt(), false)
 
         // Expand/collapse arrow
@@ -304,7 +307,7 @@ class SearchOverlay : Screen(Component.literal("")) {
     }
 
     private sealed class VisibleItem {
-        data class CategoryHeader(val category: ModuleCategory, val expanded: Boolean) : VisibleItem()
+        data class CategoryHeader(val category: ModuleCategory, val expanded: Boolean, val moduleCount: Int) : VisibleItem()
         data class ModuleItem(val module: ClientModule) : VisibleItem()
     }
 
