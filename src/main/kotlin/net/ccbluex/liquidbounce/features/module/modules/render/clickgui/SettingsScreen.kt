@@ -253,7 +253,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         when (row.type) {
             ControlType.BOOLEAN -> renderToggle(context, row.value as Value<Boolean>, x, y, w, mouseX, mouseY)
             ControlType.INT_RANGE -> renderStepper(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY) { it.toString() }
-            ControlType.FLOAT_RANGE -> renderStepper(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY) { String.format("%.1f", it) }
+            ControlType.FLOAT_RANGE -> renderStepper(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY) { String.format("%.1f", (it as RangedValue<Float>).get()) }
             ControlType.ENUM -> renderStepper(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY) { it.toString() }
             ControlType.MULTI_ENUM -> renderMultiEnum(context, row.value as MultiChoiceListValue<*>, x, y, w)
             ControlType.TEXT -> renderText(context, row.value as Value<String>, x, y, w)
