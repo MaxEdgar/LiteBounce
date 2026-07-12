@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("BracesOnIfStatements")
+
 package net.ccbluex.liquidbounce.features.module.modules.render.clickgui
 
 import com.mojang.blaze3d.platform.InputConstants
@@ -43,8 +45,6 @@ import org.lwjgl.glfw.GLFW
  * Settings editor screen for a single module.
  * Renders all module settings as an interactive scrollable list.
  */
-@file:Suppress("BracesOnIfStatements")
-
 @Suppress("CognitiveComplexMethod", "LongMethod", "TooManyFunctions", "LargeClass")
 class SettingsScreen(private val module: ClientModule) : Screen(Component.literal("")) {
 
