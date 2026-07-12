@@ -72,9 +72,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     // Range
     val range = tree(KillAuraRange)
 
-    // Target
-    var target: LivingEntity? = null
+    // Target - single source of truth in targetTracker
     val targetTracker = tree(KillAuraTargetTracker)
+    val target: LivingEntity?
+        get() = targetTracker.target
+
+    // Clicker compatibility (used by FightBot, TickBase, FailSwing)
+    val clicker = KillAuraClicker
 
     // Simple rotation
     private val rotations = tree(KillAuraRotationsValueGroup)
@@ -115,7 +119,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     override fun onDisabled() {
-        target = null
+        targetTracker.reset()
         clicks = 0
         attackTimer.reset()
         previousTargetIds.clear()
@@ -141,7 +145,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         val isInInventory = isInventoryOpen || mc.gui.screen() is ContainerScreen
         if ((isInInventory && !ignoreOpenInventory) || player.isSpectator || player.isDeadOrDying) {
-            target = null
+            targetTracker.reset()
             previousTargetIds.clear()
             return@handler
         }
@@ -156,7 +160,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         if (CombatManager.shouldPauseCombat) {
             KillAuraAutoBlock.stopBlocking()
-            target = null
+            targetTracker.reset()
             return@tickHandler
         }
 
@@ -167,12 +171,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             attackDelay = randomClickDelay()
         }
 
-        if (target == null) {
+        val currentTarget = target ?: run {
             KillAuraAutoBlock.stopBlocking()
             return@tickHandler
         }
-
-        val currentTarget = target ?: return@tickHandler
 
         // Check range
         val distance = player.boxedDistanceTo(currentTarget).toFloat()
@@ -230,10 +232,12 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
     }
 
+    fun canAttackNow(): Boolean = running && attackTimer.hasElapsed(attackDelay.toLong())
+
     private fun updateTarget() {
         if (shouldPrioritize()) return
 
-        target = null
+        targetTracker.reset()
 
         var bestTarget: LivingEntity? = null
         var bestValue = Double.MAX_VALUE
@@ -265,7 +269,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         if (bestTarget != null) {
             val rotation = findRotation(bestTarget)
             if (rotation != null) {
-                target = bestTarget
+                targetTracker.target = bestTarget
                 RotationManager.setRotationTarget(
                     rotations.toRotationTarget(rotation, bestTarget, considerInventory = !ignoreOpenInventory),
                     priority = Priority.IMPORTANT_FOR_USAGE_2,
@@ -296,8 +300,9 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private fun crosshairAngleToEntity(entity: Entity): Float {
         val rotation = RotationManager.currentRotation ?: player.rotation
         val delta = entity.boundingBox.center.subtract(player.eyePosition)
-        val yaw = Mth.atan2(delta.z, delta.x).toDeg() - 90f
-        val pitch = Mth.atan2(-delta.y, kotlin.math.sqrt(delta.x * delta.x + delta.z * delta.z)).toDeg()
+        // Mth.atan2 returns degrees in Minecraft, no .toDeg() needed
+        val yaw = Mth.atan2(delta.z, delta.x) - 90f
+        val pitch = Mth.atan2(-delta.y, kotlin.math.sqrt(delta.x * delta.x + delta.z * delta.z))
         val yawDiff = abs(Mth.wrapDegrees(rotation.yaw - yaw))
         val pitchDiff = abs(Mth.wrapDegrees(rotation.pitch - pitch))
         return max(yawDiff, pitchDiff)
@@ -315,8 +320,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val maxRange: Float
         get() = range.interactionRange + range.scanRange
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { }
+
 
     enum class RaycastMode(override val tag: String) : Tagged {
         TRACE_NONE("None"),
