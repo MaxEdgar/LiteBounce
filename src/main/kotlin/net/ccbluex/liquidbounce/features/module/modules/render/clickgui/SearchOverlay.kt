@@ -94,7 +94,7 @@ class SearchOverlay : Screen(Component.literal("")) {
                 .map { VisibleItem.ModuleItem(it) }
         }
         val items = mutableListOf<VisibleItem>()
-        val cats = ModuleCategories.categories()
+        val cats = ModuleCategories.entries
 
         for (cat in cats) {
             val sorted = ModuleManager.sortedBy { it.name }.filter { it.category == cat }
