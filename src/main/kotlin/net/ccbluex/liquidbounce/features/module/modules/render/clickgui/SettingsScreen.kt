@@ -52,6 +52,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     private var scrollBarGrabOffset = 0
     private var listeningForKey: BindValue? = null
 
+    private var sliderDraggingRow: SettingRow? = null
+
     private val settingRows = mutableListOf<SettingRow>()
 
     private val rowHeight = 16
@@ -129,7 +131,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val listX = sw / 4
         val listW = sw / 2
         val controlAreaX = listX + listW * 3 / 5 + 4
-        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
 
         // Render rows
         var currentY = listStartY + scrollOffset
@@ -151,7 +153,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                     context.text(font, row.name, listX + 6, itemY + 2, 0xFF9999CC.toInt(), false)
 
                 } else {
-                    // Regular setting row
+                    // Regular setting row (non-group, or inner group)
                     val bgColor = when {
                         hovering -> 0xFF1E1E35.toInt()
                         index % 2 == 0 -> 0xFF131325.toInt()
@@ -170,14 +172,16 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                     }
                     context.text(font, displayName, rowX, itemY + 3, nameColor, false)
 
-                    // Separator line between name and control
-                    val sepX = rowX + font.width(displayName) + 4
-                    if (sepX + 4 < controlAreaX) {
-                        context.fill(sepX, itemY + itemH / 2, controlAreaX - 2, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
-                    }
+                    // Separator line between name and control (only for non-groups)
+                    if (!row.isGroup) {
+                        val sepX = rowX + font.width(displayName) + 4
+                        if (sepX + 4 < controlAreaX) {
+                            context.fill(sepX, itemY + itemH / 2, controlAreaX - 2, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
+                        }
 
-                    // Render control
-                    renderControl(context, row, controlAreaX, itemY, controlWidth, mouseX, mouseY)
+                        // Render control
+                        renderControl(context, row, controlAreaX, itemY, controlWidth, mouseX, mouseY)
+                    }
                 }
             }
 
@@ -230,13 +234,27 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     private fun detectControlType(value: Value<*>): ControlType {
         return when {
             value.valueType == ValueType.BOOLEAN -> ControlType.BOOLEAN
-            value.valueType == ValueType.INT -> ControlType.INT_RANGE
-            value.valueType == ValueType.FLOAT -> ControlType.FLOAT_RANGE
-            value.valueType == ValueType.INT_RANGE -> ControlType.NONE
-            value.valueType == ValueType.FLOAT_RANGE -> ControlType.NONE
+            value.valueType == ValueType.INT -> ControlType.INT_SLIDER
+            value.valueType == ValueType.FLOAT -> ControlType.FLOAT_SLIDER
+            value.valueType == ValueType.INT_RANGE -> ControlType.RANGE_TEXT
+            value.valueType == ValueType.FLOAT_RANGE -> ControlType.RANGE_TEXT
             value.valueType == ValueType.TEXT -> ControlType.TEXT
             value.valueType == ValueType.COLOR -> ControlType.COLOR
             value.valueType == ValueType.KEY -> ControlType.BIND
+            // Registry types — show as text
+            value.valueType == ValueType.BLOCK || value.valueType == ValueType.ITEM ||
+                value.valueType == ValueType.ENCHANTMENT || value.valueType == ValueType.SOUND_EVENT ||
+                value.valueType == ValueType.MOB_EFFECT || value.valueType == ValueType.MENU ||
+                value.valueType == ValueType.ENTITY_TYPE || value.valueType == ValueType.C2S_PACKET ||
+                value.valueType == ValueType.S2C_PACKET || value.valueType == ValueType.CLIENT_MODULE ||
+                value.valueType == ValueType.FILE -> ControlType.TEXT
+            // Vectors / curves — show as text
+            value.valueType == ValueType.VECTOR3_I || value.valueType == ValueType.VECTOR3_D ||
+                value.valueType == ValueType.VECTOR2_F || value.valueType == ValueType.CURVE -> ControlType.TEXT
+            // List types
+            value.valueType == ValueType.LIST || value.valueType == ValueType.MUTABLE_LIST ||
+                value.valueType == ValueType.NAMED_ITEM_LIST || value.valueType == ValueType.REGISTRY_LIST ||
+                value.valueType == ValueType.REGISTRY_MUTABLE_LIST -> ControlType.TEXT
             value is ChoiceListValue<*> -> ControlType.ENUM
             value is MultiChoiceListValue<*> -> ControlType.MULTI_ENUM
             value is BindValue -> ControlType.BIND
@@ -252,8 +270,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     ) {
         when (row.type) {
             ControlType.BOOLEAN -> renderToggle(context, row.value as Value<Boolean>, x, y, w, mouseX, mouseY)
-            ControlType.INT_RANGE -> renderStepper(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY) { it.toString() }
-            ControlType.FLOAT_RANGE -> renderStepper(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY) { String.format("%.1f", (it as RangedValue<Float>).get()) }
+            ControlType.INT_SLIDER -> renderSlider(context, row.value as RangedValue<Int>, x, y, w, mouseX, mouseY)
+            ControlType.FLOAT_SLIDER -> renderSlider(context, row.value as RangedValue<Float>, x, y, w, mouseX, mouseY)
             ControlType.ENUM -> renderStepper(context, row.value as ChoiceListValue<*>, x, y, w, mouseX, mouseY) { it.toString() }
             ControlType.MULTI_ENUM -> renderMultiEnum(context, row.value as MultiChoiceListValue<*>, x, y, w)
             ControlType.TEXT -> renderText(context, row.value as Value<String>, x, y, w)
@@ -261,6 +279,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             ControlType.BIND -> renderBind(context, row.value, x, y, w, mouseX, mouseY)
             ControlType.TOGGLE_GROUP -> renderToggle(context, findEnabledValue(row.value as ToggleableValueGroup), x, y, w, mouseX, mouseY)
             ControlType.MODE_GROUP -> renderStepper(context, row.value as ModeValueGroup<*>, x, y, w, mouseX, mouseY) { (it as ModeValueGroup<*>).activeMode.tag }
+            ControlType.RANGE_TEXT -> renderRangeText(context, row.value as RangedValue<*>, x, y, w)
             ControlType.NONE -> renderNone(context, row.value, x, y, w)
         }
     }
@@ -296,7 +315,71 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             if (enabled) 0xFFFFFFFF.toInt() else 0xFF999999.toInt(), false)
     }
 
-    /** Left/right stepper control for ranged values, enums, and mode groups */
+    private data class SliderGeometry(
+        val sliderX: Int,
+        val sliderY: Int,
+        val sliderW: Int,
+        val sliderH: Int,
+        val displayText: String
+    )
+
+    /** Compute slider layout geometry for a ranged value at the given position */
+    private fun computeSliderGeometry(value: RangedValue<*>, x: Int, y: Int, w: Int): SliderGeometry? {
+        val range = value.range
+        val min = (range.start as Number).toDouble()
+        val max = (range.endInclusive as Number).toDouble()
+        if (max - min <= 0.0) return null
+
+        val font = mc.font
+        val current = (value.get() as Number).toDouble()
+        val displayText = if (range.start is Float) String.format("%.1f", current) else current.toInt().toString()
+        val textW = font.width(displayText)
+        val sliderW = (w - textW - 6).coerceAtLeast(30)
+        return SliderGeometry(x, y + 4, sliderW, 8, displayText)
+    }
+
+    /** Draggable slider control for int/float ranged values */
+    private fun renderSlider(
+        ctx: GuiGraphicsExtractor, value: RangedValue<*>,
+        x: Int, y: Int, w: Int, mx: Int, my: Int
+    ) {
+        val geo = computeSliderGeometry(value, x, y, w) ?: return
+        val font = mc.font
+        val range = value.range
+        val min = (range.start as Number).toDouble()
+        val max = (range.endInclusive as Number).toDouble()
+        val current = (value.get() as Number).toDouble()
+
+        val fraction = ((current - min) / (max - min)).toFloat().coerceIn(0f, 1f)
+        val fillEnd = geo.sliderX + (geo.sliderW * fraction).toInt()
+
+        // Track background
+        ctx.fill(geo.sliderX, geo.sliderY, geo.sliderX + geo.sliderW, geo.sliderY + geo.sliderH, 0xFF222233.toInt())
+
+        // Filled portion (green)
+        if (fraction > 0f) {
+            ctx.fill(geo.sliderX, geo.sliderY, fillEnd, geo.sliderY + geo.sliderH, 0xFF2D5A27.toInt())
+        }
+
+        // Thumb (draggable handle)
+        val thumbSize = 6
+        val thumbX = (fillEnd - thumbSize / 2).coerceIn(geo.sliderX, geo.sliderX + geo.sliderW - thumbSize)
+        val thumbY = geo.sliderY - 1
+        val thumbHover = mx in thumbX..<thumbX + thumbSize && my in thumbY..<thumbY + geo.sliderH + 2
+        ctx.fill(thumbX, thumbY, thumbX + thumbSize, thumbY + geo.sliderH + 2,
+            if (thumbHover || sliderDraggingRow?.value === value) 0xFF66CC66.toInt() else 0xFF44AA44.toInt())
+
+        // Tick marks at quarter positions
+        for (t in 1..3) {
+            val tickX = geo.sliderX + (geo.sliderW * t / 4).toInt()
+            ctx.fill(tickX, geo.sliderY + geo.sliderH - 2, tickX + 1, geo.sliderY + geo.sliderH, 0xFF334433.toInt())
+        }
+
+        // Value text (right-aligned after the slider)
+        ctx.text(font, geo.displayText, geo.sliderX + geo.sliderW + 4, y + 3, 0xFFDDDDEE.toInt(), false)
+    }
+
+    /** Left/right stepper control for enums and mode groups */
     private fun renderStepper(
         ctx: GuiGraphicsExtractor, value: Any,
         x: Int, y: Int, w: Int, mx: Int, my: Int,
@@ -314,7 +397,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         // Left arrow
         ctx.fill(decX, btnY, decX + btnSize, btnY + btnSize,
             if (decHover) 0xFF444466.toInt() else 0xFF222233.toInt())
-        ctx.text(font, "<", decX + 2, btnY, if (decHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
+        ctx.text(font, "<", decX + 3, btnY + 1, if (decHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
 
         // Value text
         ctx.text(font, text, x + w / 2 - font.width(text) / 2, y + 3, 0xFFDDDDEE.toInt(), false)
@@ -322,7 +405,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         // Right arrow
         ctx.fill(incX, btnY, incX + btnSize, btnY + btnSize,
             if (incHover) 0xFF444466.toInt() else 0xFF222233.toInt())
-        ctx.text(font, ">", incX + 2, btnY, if (incHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
+        ctx.text(font, ">", incX + 3, btnY + 1, if (incHover) 0xFFFFAA00.toInt() else 0xFF666677.toInt(), false)
     }
 
     private fun renderMultiEnum(
@@ -337,17 +420,17 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     }
 
     private fun renderText(
-        ctx: GuiGraphicsExtractor, value: Value<String>,
+        ctx: GuiGraphicsExtractor, value: Value<*>,
         x: Int, y: Int, w: Int
     ) {
         val font = mc.font
-        val fullText = "\"${value.get()}\""
-        val truncated = if (font.width(fullText) > w - 4) {
-            font.plainSubstrByWidth(fullText, w - 10) + "..."
+        val raw = value.get().toString()
+        val fullText = if (font.width(raw) > w - 4) {
+            font.plainSubstrByWidth(raw, w - 10) + "..."
         } else {
-            fullText
+            raw
         }
-        ctx.text(font, truncated, x + w - font.width(truncated), y + 3, 0xFFCCCCDD.toInt(), false)
+        ctx.text(font, fullText, x + w - font.width(fullText), y + 3, 0xFFCCCCDD.toInt(), false)
     }
 
     private fun renderColor(
@@ -395,6 +478,19 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             if (isListening) 0xFFFFDD44.toInt() else 0xFFDDDDEE.toInt(), false)
     }
 
+    /** Displays int/float range pairs as text (e.g., "3.0-8.0") */
+    private fun renderRangeText(
+        ctx: GuiGraphicsExtractor, value: RangedValue<*>,
+        x: Int, y: Int, w: Int
+    ) {
+        val font = mc.font
+        val displayText = when (val v = value.get()) {
+            is ClosedRange<*> -> "${v.start}-${v.endInclusive}"
+            else -> v.toString()
+        }
+        ctx.text(font, displayText, x + w - font.width(displayText), y + 3, 0xFF88AAFF.toInt(), false)
+    }
+
     private fun renderNone(
         ctx: GuiGraphicsExtractor, value: Value<*>,
         x: Int, y: Int, w: Int
@@ -424,6 +520,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             if (my in row.y..<row.y + itemH &&
                 mx >= listX && mx < listX + listW) {
                 if (row.isGroup && row.isTopLevel) continue
+                if (row.isGroup) continue // inner groups are just containers
                 if (handleControlClick(row, mx, my, controlAreaX, controlWidth)) {
                     return true
                 }
@@ -472,7 +569,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             val listX = width / 4
             val listW = width / 2
             val controlAreaX = listX + listW * 3 / 5 + 4
-            val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(40)
+            val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
             handled = checkSettingRowClick(mx, my, controlAreaX, controlWidth) ||
                 checkScrollbarClick(mx, my)
         }
@@ -482,6 +579,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
     override fun mouseReleased(context: MouseButtonEvent): Boolean {
         scrollBarGrabbed = false
+        sliderDraggingRow = null
         return super.mouseReleased(context)
     }
 
@@ -497,37 +595,12 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                 value.set(!value.get())
                 true
             }
-            ControlType.INT_RANGE -> {
-                val value = row.value as RangedValue<Int>
-                val range = value.range
-                val min = (range as ClosedRange<Int>).start
-                val max = range.endInclusive
-                val btnSize = 10
-                val btnY = y + 3
-                val decX = x
-                val incX = x + w - btnSize
-                if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
-                    value.set((value.get() - 1).coerceAtLeast(min))
-                } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
-                    value.set((value.get() + 1).coerceAtMost(max))
-                }
+            ControlType.INT_SLIDER -> {
+                handleSliderPress(row.value as RangedValue<Int>, row, mouseX, mouseY, x, y, w)
                 true
             }
-            ControlType.FLOAT_RANGE -> {
-                val value = row.value as RangedValue<Float>
-                val range = value.range
-                val min = (range as ClosedRange<Float>).start
-                val max = range.endInclusive
-                val btnSize = 10
-                val btnY = y + 3
-                val decX = x
-                val incX = x + w - btnSize
-                val step = 0.5f
-                if (mouseX in decX..<decX + btnSize && mouseY in btnY..<btnY + btnSize) {
-                    value.set((value.get() - step).coerceAtLeast(min))
-                } else if (mouseX in incX..<incX + btnSize && mouseY in btnY..<btnY + btnSize) {
-                    value.set((value.get() + step).coerceAtMost(max))
-                }
+            ControlType.FLOAT_SLIDER -> {
+                handleSliderPress(row.value as RangedValue<Float>, row, mouseX, mouseY, x, y, w)
                 true
             }
             ControlType.ENUM -> {
@@ -599,6 +672,56 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
+    /** Handle clicking or starting a drag on a slider */
+    private fun handleSliderPress(value: RangedValue<*>, row: SettingRow, mouseX: Int, mouseY: Int, x: Int, y: Int, w: Int) {
+        val range = value.range
+        val min = (range.start as Number).toDouble()
+        val max = (range.endInclusive as Number).toDouble()
+        if (max - min <= 0.0) return
+
+        val listX = width / 4
+        val listW = width / 2
+        val controlAreaX = listX + listW * 3 / 5 + 4
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
+        val geo = computeSliderGeometry(value, controlAreaX, row.y, controlWidth) ?: return
+
+        // Check if click is on the slider track
+        if (mouseY in geo.sliderY..<geo.sliderY + geo.sliderH && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
+            val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
+            val newVal = min + fraction * (max - min)
+            when (value) {
+                is RangedValue<Int> -> value.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()))
+                is RangedValue<Float> -> value.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()))
+            }
+            sliderDraggingRow = row
+        }
+    }
+
+    /** Update a slider value based on mouse position during drag */
+    private fun updateSliderDrag(mouseX: Int, mouseY: Int) {
+        val row = sliderDraggingRow ?: return
+        val value = row.value as? RangedValue<*> ?: return
+        val range = value.range
+        val min = (range.start as Number).toDouble()
+        val max = (range.endInclusive as Number).toDouble()
+        if (max - min <= 0.0) return
+
+        val listX = width / 4
+        val listW = width / 2
+        val controlAreaX = listX + listW * 3 / 5 + 4
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
+        val geo = computeSliderGeometry(value, controlAreaX, row.y, controlWidth) ?: return
+
+        if (mouseY in (geo.sliderY - 4)..<(geo.sliderY + geo.sliderH + 4) && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
+            val fraction = ((mouseX - geo.sliderX).toFloat() / geo.sliderW).coerceIn(0f, 1f)
+            val newVal = min + fraction * (max - min)
+            when (value) {
+                is RangedValue<Int> -> value.set(newVal.toInt().coerceIn(min.toInt(), max.toInt()))
+                is RangedValue<Float> -> value.set(newVal.toFloat().coerceIn(min.toFloat(), max.toFloat()))
+            }
+        }
+    }
+
     // Scroll wheel
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
@@ -627,6 +750,12 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             }
             return true
         }
+
+        if (sliderDraggingRow != null) {
+            updateSliderDrag(event.x().toInt(), event.y().toInt())
+            return true
+        }
+
         return super.mouseDragged(event, dx, dy)
     }
 
@@ -664,8 +793,9 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
     private enum class ControlType {
         BOOLEAN,
-        INT_RANGE,
-        FLOAT_RANGE,
+        INT_SLIDER,
+        FLOAT_SLIDER,
+        RANGE_TEXT,
         ENUM,
         MULTI_ENUM,
         TEXT,
