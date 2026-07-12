@@ -43,6 +43,8 @@ import org.lwjgl.glfw.GLFW
  * Settings editor screen for a single module.
  * Renders all module settings as an interactive scrollable list.
  */
+@file:Suppress("BracesOnIfStatements")
+
 @Suppress("CognitiveComplexMethod", "LongMethod", "TooManyFunctions", "LargeClass")
 class SettingsScreen(private val module: ClientModule) : Screen(Component.literal("")) {
 
@@ -73,8 +75,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
     @Suppress("CognitiveComplexMethod", "LongMethod", "NestedBlockDepth")
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTicks: Float) {
-        @Suppress("BracesOnIfStatements")
-        val suppressBraces = Any()
         val sw = width
         val sh = height
         val font = mc.font
@@ -493,8 +493,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
-    private var colorPickerRowY = 0
-
     /** Simple inline RGB sliders for editing a color */
     private fun renderColorEditor(
         ctx: GuiGraphicsExtractor, value: Value<Color4b>,
@@ -687,8 +685,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
     @Suppress("CognitiveComplexMethod", "LongMethod")
     private fun handleControlClick(row: SettingRow, mouseX: Int, mouseY: Int, controlAreaX: Int, controlWidth: Int): Boolean {
-        @Suppress("BracesOnIfStatements")
-        val suppressBraces2 = Any()
         val x = controlAreaX
         val y = row.y
         val w = controlWidth
@@ -847,6 +843,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (scrollBarGrabbed) return true
+        colorPickerEditing = null
         val scrollDelta = (verticalAmount * 20).toInt()
         scrollOffset += scrollDelta
         scrollOffset = scrollOffset.coerceAtMost(0)
