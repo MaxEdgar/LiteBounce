@@ -55,6 +55,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     private var listeningForKey: BindValue? = null
 
     private var sliderDraggingRow: SettingRow? = null
+    private var rangeSliderDraggingRow: SettingRow? = null
+    private var rangeSliderDraggingIsMin: Boolean = false
 
     private val settingRows = mutableListOf<SettingRow>()
 
@@ -133,29 +135,30 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val listX = sw / 4
         val listW = sw / 2
         val controlAreaX = listX + listW * 3 / 5 + 4
-        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(80)
 
         // Render rows
         var currentY = listStartY + scrollOffset
 
         for ((index, row) in settingRows.withIndex()) {
             row.y = currentY
-            val itemH = if (row.isGroup && row.isTopLevel) headerH else rowHeight
-
-            if (currentY + itemH >= listStartY - itemH && currentY < listEndY) {
+            val isPlainHeader = row.isGroup && row.isTopLevel && row.type == ControlType.NONE
+            val itemH = if (isPlainHeader) headerH else rowHeight                    if (currentY + itemH >= listStartY - itemH && currentY < listEndY) {
                 val itemY = currentY
                 val hovering = mouseX >= listX && mouseY >= itemY &&
                     mouseX < listX + listW && mouseY < itemY + itemH
 
-                if (row.isGroup && row.isTopLevel) {
-                    // Group header styling
+                val isPlainHeader = row.isGroup && row.isTopLevel && row.type == ControlType.NONE
+
+                if (isPlainHeader) {
+                    // Group header styling (only for plain ValueGroup containers)
                     val headerBg = if (hovering) 0xFF1A1A35.toInt() else 0xFF151528.toInt()
                     context.fill(listX, itemY, listX + listW, itemY + headerH, headerBg)
                     context.fill(listX, itemY + headerH, listX + listW, itemY + headerH + 1, 0xFF2A2A55.toInt())
                     context.text(font, row.name, listX + 6, itemY + 2, 0xFF9999CC.toInt(), false)
 
                 } else {
-                    // Regular setting row (non-group, or inner group)
+                    // Regular setting row (non-group, or interactive group like MODE_GROUP/TOGGLE_GROUP)
                     val bgColor = when {
                         hovering -> 0xFF1E1E35.toInt()
                         index % 2 == 0 -> 0xFF131325.toInt()
@@ -174,8 +177,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
                     }
                     context.text(font, displayName, rowX, itemY + 3, nameColor, false)
 
-                    // Separator stub between name and control (only for non-groups)
-                    if (!row.isGroup) {
+                    // Separator stub between name and control (for non-groups AND interactive groups)
+                    if (!row.isGroup || row.type == ControlType.MODE_GROUP || row.type == ControlType.TOGGLE_GROUP) {
                         val sepX = rowX + font.width(displayName) + 6
                         val sepStubW = 8
                         context.fill(sepX, itemY + itemH / 2, sepX + sepStubW, itemY + itemH / 2 + 1, 0xFF1A1A33.toInt())
@@ -289,7 +292,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             ControlType.BIND -> renderBind(context, row.value, x, y, w, mouseX, mouseY)
             ControlType.TOGGLE_GROUP -> renderToggle(context, findEnabledValue(row.value as ToggleableValueGroup), x, y, w, mouseX, mouseY)
             ControlType.MODE_GROUP -> renderStepper(context, row.value as ModeValueGroup<*>, x, y, w, mouseX, mouseY) { (it as ModeValueGroup<*>).activeMode.tag }
-            ControlType.RANGE_TEXT -> renderRangeText(context, row.value as RangedValue<*>, x, y, w)
+            ControlType.RANGE_TEXT -> renderRangeSlider(context, row.value as RangedValue<*>, x, y, w, mouseX, mouseY)
             ControlType.NONE -> renderNone(context, row.value, x, y, w)
         }
     }
@@ -572,17 +575,72 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             if (isListening) 0xFFFFDD44.toInt() else 0xFFDDDDEE.toInt(), false)
     }
 
-    /** Displays int/float range pairs as text (e.g., "3.0-8.0") */
-    private fun renderRangeText(
+    /** Dual mini-slider for int/float range values (e.g. CPS 5-8) */
+    private fun renderRangeSlider(
         ctx: GuiGraphicsExtractor, value: RangedValue<*>,
-        x: Int, y: Int, w: Int
+        x: Int, y: Int, w: Int, mouseX: Int, mouseY: Int
     ) {
         val font = mc.font
-        val displayText = when (val v = value.get()) {
-            is ClosedRange<*> -> "${v.start}-${v.endInclusive}"
-            else -> v.toString()
+        val rangeVal = value.get()
+        if (rangeVal !is ClosedRange<*>) return
+
+        val minVal = (rangeVal.start as Number).toDouble()
+        val maxVal = (rangeVal.endInclusive as Number).toDouble()
+
+        val constraint = value.range
+        val cMin = (constraint.start as Number).toDouble()
+        val cMax = (constraint.endInclusive as Number).toDouble()
+        if (cMax - cMin <= 0.0) return
+
+        val sliderH = 8
+        val sliderY = y + 4
+        val gap = 12
+        val labelW = font.width("Min")
+        val leftW = (w - gap) / 2
+        val rightW = w - leftW - gap
+
+        val minSliderX = x
+        val maxSliderX = x + leftW + gap
+
+        // --- Min slider ---
+        val minFrac = ((minVal - cMin) / (cMax - cMin)).toFloat().coerceIn(0f, 1f)
+        val minEnd = minSliderX + (leftW * minFrac).toInt()
+        val isDraggingMin = rangeSliderDraggingRow?.value === value && rangeSliderDraggingIsMin
+        val hoverMin = mouseY in sliderY..<sliderY + sliderH && mouseX >= minSliderX && mouseX < minSliderX + leftW
+
+        ctx.text(font, "Min", minSliderX, y + 2, 0xFF8888AA.toInt(), false)
+        ctx.fill(minSliderX, sliderY, minSliderX + leftW, sliderY + sliderH, 0xFF222233.toInt())
+        if (minFrac > 0f) {
+            ctx.fill(minSliderX, sliderY, minEnd, sliderY + sliderH, 0xFF2D5A27.toInt())
         }
-        ctx.text(font, displayText, x + w - font.width(displayText), y + 3, 0xFF88AAFF.toInt(), false)
+        val thumbS = 6
+        val minThumbX = (minEnd - thumbS / 2).coerceIn(minSliderX, minSliderX + leftW - thumbS)
+        ctx.fill(minThumbX, sliderY - 1, minThumbX + thumbS, sliderY + sliderH + 2,
+            if (hoverMin || isDraggingMin) 0xFF66CC66.toInt() else 0xFF44AA44.toInt())
+
+        val minText = if (rangeVal.start is Float) String.format("%.1f", minVal) else minVal.toInt().toString()
+        ctx.text(font, minText, minSliderX + leftW + 1, y + 3, 0xFFDDDDEE.toInt(), false)
+
+        // --- Dash separator ---
+        ctx.text(font, "-", x + leftW, y + 3, 0xFF666688.toInt(), false)
+
+        // --- Max slider ---
+        val maxFrac = ((maxVal - cMin) / (cMax - cMin)).toFloat().coerceIn(0f, 1f)
+        val maxEnd = maxSliderX + (rightW * maxFrac).toInt()
+        val isDraggingMax = rangeSliderDraggingRow?.value === value && !rangeSliderDraggingIsMin
+        val hoverMax = mouseY in sliderY..<sliderY + sliderH && mouseX >= maxSliderX && mouseX < maxSliderX + rightW
+
+        ctx.text(font, "Max", maxSliderX, y + 2, 0xFF8888AA.toInt(), false)
+        ctx.fill(maxSliderX, sliderY, maxSliderX + rightW, sliderY + sliderH, 0xFF222233.toInt())
+        if (maxFrac > 0f) {
+            ctx.fill(maxSliderX, sliderY, maxEnd, sliderY + sliderH, 0xFF2D5A27.toInt())
+        }
+        val maxThumbX = (maxEnd - thumbS / 2).coerceIn(maxSliderX, maxSliderX + rightW - thumbS)
+        ctx.fill(maxThumbX, sliderY - 1, maxThumbX + thumbS, sliderY + sliderH + 2,
+            if (hoverMax || isDraggingMax) 0xFF66CC66.toInt() else 0xFF44AA44.toInt())
+
+        val maxText = if (rangeVal.endInclusive is Float) String.format("%.1f", maxVal) else maxVal.toInt().toString()
+        ctx.text(font, maxText, maxSliderX + rightW + 1, y + 3, 0xFFDDDDEE.toInt(), false)
     }
 
     private fun renderNone(
@@ -616,11 +674,12 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val listW = width / 2
 
         for (row in settingRows) {
-            val itemH = if (row.isGroup && row.isTopLevel) headerH else rowHeight
+            val isPlainHeader = row.isGroup && row.isTopLevel && row.type == ControlType.NONE
+            val itemH = if (isPlainHeader) headerH else rowHeight
             if (my in row.y..<row.y + itemH &&
                 mx >= listX && mx < listX + listW) {
-                if (row.isGroup && row.isTopLevel) continue
-                if (row.isGroup) continue // inner groups are just containers
+                // Skip only plain value-group containers (not MODE_GROUP or TOGGLE_GROUP)
+                if (row.isGroup && (row.type == ControlType.NONE)) continue
                 if (handleControlClick(row, mx, my, controlAreaX, controlWidth)) {
                     return true
                 }
@@ -644,8 +703,8 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val maxScroll = (contentH - listH).coerceAtLeast(0)
 
         if (maxScroll > 0) {
-            val scrollBarX = listX + listW + 2
-            val scrollBarW = 4
+            val scrollBarX = listX + listW + 3
+            val scrollBarW = 6
             if (mx in scrollBarX..<scrollBarX + scrollBarW) {
                 scrollBarGrabbed = true
                 scrollBarGrabY = my
@@ -680,6 +739,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
     override fun mouseReleased(context: MouseButtonEvent): Boolean {
         scrollBarGrabbed = false
         sliderDraggingRow = null
+        rangeSliderDraggingRow = null
         return super.mouseReleased(context)
     }
 
@@ -701,6 +761,10 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             }
             ControlType.FLOAT_SLIDER -> {
                 handleSliderPress(row.value as RangedValue<Float>, row, mouseX, mouseY, x, y, w)
+                true
+            }
+            ControlType.RANGE_TEXT -> {
+                handleRangeSliderPress(row.value as RangedValue<*>, row, mouseX, mouseY, x, y, w)
                 true
             }
             ControlType.ENUM -> {
@@ -810,8 +874,121 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         }
     }
 
+    /** Handle clicking on a range slider (min or max handle) */
+    private fun handleRangeSliderPress(value: RangedValue<*>, row: SettingRow, mouseX: Int, mouseY: Int, x: Int, y: Int, w: Int) {
+        val rangeVal = value.get()
+        if (rangeVal !is ClosedRange<*>) return
+
+        val constraint = value.range
+        val cMin = (constraint.start as Number).toDouble()
+        val cMax = (constraint.endInclusive as Number).toDouble()
+        if (cMax - cMin <= 0.0) return
+
+        val sliderH = 8
+        val sliderY = y + 4
+        val gap = 12
+        val leftW = (w - gap) / 2
+
+        val minSliderX = x
+        val maxSliderX = x + leftW + gap
+        val rightW = w - leftW - gap
+
+        // Check min slider
+        if (mouseY in sliderY..<sliderY + sliderH && mouseX >= minSliderX && mouseX < minSliderX + leftW) {
+            val fraction = ((mouseX - minSliderX).toFloat() / leftW).coerceIn(0f, 1f)
+            val newMin = cMin + fraction * (cMax - cMin)
+            val maxVal = (rangeVal.endInclusive as Number).toDouble()
+            val clampedMin = newMin.coerceAtMost(maxVal)
+            val newRange = if (rangeVal.start is Float)
+                clampedMin.toFloat()..maxVal.toFloat()
+            else
+                clampedMin.toInt()..maxVal.toInt()
+            @Suppress("UNCHECKED_CAST")
+            value.set(newRange as Nothing)
+            rangeSliderDraggingRow = row
+            rangeSliderDraggingIsMin = true
+            return
+        }
+
+        // Check max slider
+        if (mouseY in sliderY..<sliderY + sliderH && mouseX >= maxSliderX && mouseX < maxSliderX + rightW) {
+            val fraction = ((mouseX - maxSliderX).toFloat() / rightW).coerceIn(0f, 1f)
+            val newMax = cMin + fraction * (cMax - cMin)
+            val minVal = (rangeVal.start as Number).toDouble()
+            val clampedMax = newMax.coerceAtLeast(minVal)
+            val newRange = if (rangeVal.start is Float)
+                minVal.toFloat()..clampedMax.toFloat()
+            else
+                minVal.toInt()..clampedMax.toInt()
+            @Suppress("UNCHECKED_CAST")
+            value.set(newRange as Nothing)
+            rangeSliderDraggingRow = row
+            rangeSliderDraggingIsMin = false
+            return
+        }
+    }
+
     /** Update a slider value based on mouse position during drag */
     private fun updateSliderDrag(mouseX: Int, mouseY: Int) {
+        val listX = width / 4
+        val listW = width / 2
+        val controlAreaX = listX + listW * 3 / 5 + 4
+        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(80)
+
+        // Handle range slider drag
+        if (rangeSliderDraggingRow != null) {
+            val row = rangeSliderDraggingRow ?: return
+            val value = row.value as? RangedValue<*> ?: return
+            val isMin = rangeSliderDraggingIsMin
+
+            val rangeVal = value.get()
+            if (rangeVal !is ClosedRange<*>) return
+
+            val constraint = value.range
+            val cMin = (constraint.start as Number).toDouble()
+            val cMax = (constraint.endInclusive as Number).toDouble()
+            if (cMax - cMin <= 0.0) return
+
+            val x = controlAreaX
+            val y = row.y
+            val w = controlWidth
+
+            val sliderH = 8
+            val sliderY = y + 4
+            val gap = 12
+            val leftW = (w - gap) / 2
+
+            val minSliderX = x
+            val maxSliderX = x + leftW + gap
+            val rightW = w - leftW - gap
+
+            if (isMin) {
+                val fraction = ((mouseX - minSliderX).toFloat() / leftW).coerceIn(0f, 1f)
+                val newMin = cMin + fraction * (cMax - cMin)
+                val maxVal = (rangeVal.endInclusive as Number).toDouble()
+                val clampedMin = newMin.coerceAtMost(maxVal)
+                val newRange = if (rangeVal.start is Float)
+                    clampedMin.toFloat()..maxVal.toFloat()
+                else
+                    clampedMin.toInt()..maxVal.toInt()
+                @Suppress("UNCHECKED_CAST")
+                value.set(newRange as Nothing)
+            } else {
+                val fraction = ((mouseX - maxSliderX).toFloat() / rightW).coerceIn(0f, 1f)
+                val newMax = cMin + fraction * (cMax - cMin)
+                val minVal = (rangeVal.start as Number).toDouble()
+                val clampedMax = newMax.coerceAtLeast(minVal)
+                val newRange = if (rangeVal.start is Float)
+                    minVal.toFloat()..clampedMax.toFloat()
+                else
+                    minVal.toInt()..clampedMax.toInt()
+                @Suppress("UNCHECKED_CAST")
+                value.set(newRange as Nothing)
+            }
+            return
+        }
+
+        // Handle normal slider drag
         val row = sliderDraggingRow ?: return
         val value = row.value as? RangedValue<*> ?: return
         val range = value.range
@@ -819,10 +996,6 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
         val max = (range.endInclusive as Number).toDouble()
         if (max - min <= 0.0) return
 
-        val listX = width / 4
-        val listW = width / 2
-        val controlAreaX = listX + listW * 3 / 5 + 4
-        val controlWidth = (listW * 2 / 5 - 8).coerceAtLeast(60)
         val geo = computeSliderGeometry(value, controlAreaX, row.y, controlWidth) ?: return
 
         if (mouseY in (geo.sliderY - 4)..<(geo.sliderY + geo.sliderH + 4) && mouseX >= geo.sliderX && mouseX < geo.sliderX + geo.sliderW) {
@@ -870,7 +1043,7 @@ class SettingsScreen(private val module: ClientModule) : Screen(Component.litera
             return true
         }
 
-        if (sliderDraggingRow != null) {
+        if (sliderDraggingRow != null || rangeSliderDraggingRow != null) {
             updateSliderDrag(event.x().toInt(), event.y().toInt())
             return true
         }

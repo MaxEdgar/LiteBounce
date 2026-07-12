@@ -656,7 +656,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
     }
 }
 
-private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
+private val defaultColor = Color4b.fullAlpha(0x00CC44).alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .readNativeImage().asTexture { "TargetRenderer Ghost" }

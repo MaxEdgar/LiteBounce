@@ -43,7 +43,7 @@ class SearchOverlay : Screen(Component.literal("")) {
 
     private val searchBarHeight = 20
     private val itemHeight = 14
-    private val categoryHeaderH = 16
+    private val categoryHeaderH = 22
 
     /** Persistent expanded categories (maps category tag -> expanded) */
     private val expandedCategories = hashMapOf<String, Boolean>()
@@ -162,7 +162,7 @@ class SearchOverlay : Screen(Component.literal("")) {
 
         // Module count
         val count = ModuleManager.sortedBy { it.name }.count { it.category == item.category }
-        ctx.text(font, "$count modules", x + 15, y + 4 + font.lineHeight,
+        ctx.text(font, "$count modules", x + 15, y + 12,
             0xFF555577.toInt(), false)
 
         // Expand/collapse arrow
