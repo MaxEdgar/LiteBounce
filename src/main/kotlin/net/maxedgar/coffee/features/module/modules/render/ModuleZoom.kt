@@ -1,0 +1,113 @@
+/*
+ * This file is part of Coffee (https://github.com/MaxEdgar/Coffee)
+ *
+ * Copyright (c) 2025 MaxEdgar
+ *
+ * Coffee is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Coffee is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Coffee. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.maxedgar.coffee.features.module.modules.render
+
+import net.maxedgar.coffee.config.types.group.ToggleableValueGroup
+import net.maxedgar.coffee.event.events.MouseScrollInHotbarEvent
+import net.maxedgar.coffee.event.handler
+import net.maxedgar.coffee.features.module.ClientModule
+import net.maxedgar.coffee.features.module.ModuleCategories
+import net.maxedgar.coffee.injection.mixins.minecraft.client.MixinMouseHandler
+import net.maxedgar.coffee.utils.client.Chronometer
+import net.maxedgar.coffee.utils.input.InputBind
+import net.maxedgar.coffee.utils.math.Easing
+import net.minecraft.util.Mth
+import kotlin.math.abs
+import kotlin.math.round
+
+/**
+ * Module Zoom
+ *
+ * Allows you to zoom.
+ *
+ * The mouse is slowed down with the help of mixins in [MixinMouseHandler].
+ */
+object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = InputBind.BindAction.HOLD) {
+
+    val zoom by int("Zoom", 30, 10..150)
+
+    object Scroll : ToggleableValueGroup(this, "Scroll", true) {
+
+        val speed by float("Speed", 2f, 0.5f..8f)
+
+        @Suppress("unused")
+        val onScroll = handler<MouseScrollInHotbarEvent> {
+            previousFov = getFov(true)
+            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1, 179)
+            reset()
+            it.cancelEvent()
+        }
+
+    }
+
+    init {
+        tree(Scroll)
+    }
+
+    private val transition by easing("Transition", Easing.QUAD_IN)
+    private val durationFactor by float("DurationFactor", 2f, 0f..10f, "x")
+
+    private val chronometer = Chronometer()
+    private var targetFov = 0
+    private var previousFov = 0
+    private var scaledDifference = 0.0
+    private var disableAnimationFinished = true
+
+    override fun onEnabled() {
+        targetFov = zoom
+        previousFov = getDefaultFov()
+        reset()
+    }
+
+    override fun onDisabled() {
+        previousFov = getFov(true)
+        chronometer.reset()
+        targetFov = getDefaultFov()
+        reset()
+        disableAnimationFinished = false
+    }
+
+    fun getFov(enabled: Boolean, original: Int = 0): Int {
+        if (!enabled && disableAnimationFinished) {
+            return original
+        }
+
+        val factor = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
+            1f
+        } else {
+            (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
+        }
+        if (!enabled && factor == 1f) {
+            disableAnimationFinished = true
+        }
+
+        return Mth.lerpInt(transition.transform(factor), previousFov, targetFov)
+    }
+
+    private fun getDefaultFov(): Int {
+        val fov = mc.options.fov().get()
+        return if (ModuleNoFov.running) ModuleNoFov.getFov(fov) else fov
+    }
+
+    private fun reset() {
+        chronometer.reset()
+        scaledDifference = durationFactor.toDouble() * abs(targetFov - previousFov)
+    }
+
+}

@@ -1,0 +1,148 @@
+/*
+ * This file is part of Coffee (https://github.com/MaxEdgar/Coffee)
+ *
+ * Copyright (c) 2025 MaxEdgar
+ *
+ * Coffee is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Coffee is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Coffee. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.maxedgar.coffee.script.bindings.features
+
+import net.maxedgar.coffee.config.types.Value
+import net.maxedgar.coffee.event.EVENT_NAME_TO_CLASS
+import net.maxedgar.coffee.event.Event
+import net.maxedgar.coffee.event.EventManager
+import net.maxedgar.coffee.event.events.RefreshArrayListEvent
+import net.maxedgar.coffee.event.newEventHook
+import net.maxedgar.coffee.features.module.ClientModule
+import net.maxedgar.coffee.features.module.ModuleCategories
+import net.maxedgar.coffee.script.PolyglotScript
+import net.maxedgar.coffee.utils.client.MessageMetadata
+import net.maxedgar.coffee.utils.client.chat
+import net.maxedgar.coffee.utils.client.highlight
+import net.maxedgar.coffee.utils.client.inGame
+import net.maxedgar.coffee.utils.client.markAsError
+import net.maxedgar.coffee.utils.client.regular
+import net.maxedgar.coffee.utils.client.variable
+import net.maxedgar.coffee.utils.client.warning
+import java.util.function.Supplier
+
+class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) : ClientModule(
+    name = moduleObject["name"] as String,
+    category = ModuleCategories.byName(moduleObject["category"] as String)!!
+) {
+
+    private val events = hashMapOf<String, org.graalvm.polyglot.Value>()
+    private val _values = linkedMapOf<String, Value<*>>()
+    override var tag: String? = null
+        set(value) {
+            field = value
+            EventManager.callEvent(RefreshArrayListEvent)
+        }
+
+    private var _description: String? = null
+    override var description: Supplier<String?> = Supplier { _description ?: "" }
+
+    /**
+     * Allows the user to access values by typing module.settings.<valuename>
+     */
+    override val settings by lazy { _values }
+
+    init {
+        if (moduleObject.containsKey("settings")) {
+            val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
+
+            for ((name, value) in settingsObject) {
+                _values[name] = value(value)
+            }
+        }
+
+        if (moduleObject.containsKey("tag")) {
+            tag = moduleObject["tag"] as String
+        }
+
+        if (moduleObject.containsKey("description")) {
+            _description = moduleObject["description"] as String
+        }
+    }
+
+    /**
+     * Called from inside the script to register a new event handler.
+     * @param eventName Name of the event.
+     * @param handler JavaScript function used to handle the event.
+     *   1. `() => void` (enable/disable)
+     *   2. `(Event) => void` (handler<T>)
+     *   3. `async (Event) => void` (sequenceHandler<T>)
+     */
+    fun on(eventName: String, handler: org.graalvm.polyglot.Value) {
+        if (!handler.canExecute()) {
+            logger.error("Invalid event handler for $eventName")
+            return
+        }
+
+        events[eventName] = handler
+        hookHandler(eventName)
+    }
+
+    override fun onEnabled() = callEvent("enable")
+
+    override fun onDisabled() = callEvent("disable")
+
+    /**
+     * Calls the function of the [event] with the [payload] of the event.
+     *
+     * @param payload when event is "enable" or "disable", it will be null
+     */
+    private fun callEvent(event: String, payload: Event? = null) {
+        try {
+            events[event]?.executeVoid(payload)
+        } catch (throwable: Throwable) {
+            if (inGame) {
+                chat(
+                    regular("["),
+                    warning(script.file.name),
+                    regular("] "),
+                    markAsError(script.scriptName),
+                    regular("::"),
+                    markAsError(name),
+                    regular("::"),
+                    markAsError(event),
+                    regular(" threw ["),
+                    highlight(throwable.javaClass.simpleName),
+                    regular("]: "),
+                    variable(throwable.message ?: ""),
+                    metadata = MessageMetadata(prefix = false)
+                )
+
+            }
+
+            logger.error("${script.scriptName}::$name -> Event Function $event threw an error", throwable)
+
+            // Disable the module if an error occurs
+            enabled = false
+        }
+    }
+
+    /**
+     * Register new event hook
+     */
+    private fun hookHandler(eventName: String) {
+        // Get event case-insensitive
+        val clazz = EVENT_NAME_TO_CLASS[eventName] ?: return
+
+        EventManager.registerEventHook(
+            clazz,
+            newEventHook { callEvent(eventName, it) }
+        )
+    }
+}

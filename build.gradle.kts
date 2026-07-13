@@ -87,7 +87,7 @@ allprojects {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
+    accessWidenerPath = file("src/main/resources/coffee.accesswidener")
 }
 
 dependencies {
@@ -176,7 +176,7 @@ tasks.processResources {
             logger.lifecycle("Skipping contributor fetch outside GitHub CI")
             "[]"
         } else {
-            val contributors = getContributors("CCBlueX", "LiquidBounce")
+            val contributors = getContributors("MaxEdgar", "CoffeeV2")
             logger.lifecycle("Fetched ${contributors.size} contributors on GitHub CI")
             JsonOutput.prettyPrint(JsonOutput.toJson(contributors))
         }
@@ -254,18 +254,18 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
     group = "verification"
     description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
 
-    val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
+    val languageFolder = file("src/main/resources/resources/coffee/lang")
     baselineFile.set(languageFolder.resolve(baselineFileName))
     files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
     consoleOutputCount.set(5)
 }
 
-tasks.register<JavaExec>("liquidInstruction") {
+tasks.register<JavaExec>("coffeeInstruction") {
     group = "other"
-    description = "Run LiquidInstruction class."
+    description = "Run CoffeeInstruction class."
 
     classpath = sourceSets.main.get().runtimeClasspath
-    mainClass.set("net.ccbluex.liquidbounce.LiquidInstruction")
+    mainClass.set("net.maxedgar.coffee.CoffeeInstruction")
 }
 
 java {
@@ -296,7 +296,7 @@ tasks.jar {
     inputs.property("maven_group", mavenGroup)
 
     manifest {
-        attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+        attributes["Main-Class"] = "net.maxedgar.coffee.CoffeeInstruction"
         attributes["Implementation-Title"] = archivesBaseName.get()
         attributes["Implementation-Version"] = modVersion.get()
         attributes["Implementation-Vendor"] = mavenGroup.get()

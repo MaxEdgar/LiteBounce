@@ -1,0 +1,45 @@
+/*
+ * This file is part of Coffee (https://github.com/MaxEdgar/Coffee)
+ *
+ * Copyright (c) 2025 MaxEdgar
+ *
+ * Coffee is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Coffee is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Coffee. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.maxedgar.coffee.features.module.modules.combat.velocity.mode
+
+import net.maxedgar.coffee.event.events.AttackEntityEvent
+import net.maxedgar.coffee.event.handler
+import net.maxedgar.coffee.utils.math.multiply
+
+internal object VelocityDexland : VelocityMode("Dexland") {
+
+    private val hReduce by float("HReduce", 0.3f, 0f..1f)
+    private val times by int("AttacksToWork", 4, 1..10)
+
+    private var lastAttackTime = 0L
+    var count = 0
+
+    @Suppress("unused")
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+            player.deltaMovement = player.deltaMovement.multiply(
+                factorX = hReduce,
+                factorZ = hReduce,
+            )
+        }
+
+        lastAttackTime = System.currentTimeMillis()
+    }
+
+}
