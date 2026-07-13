@@ -54,12 +54,12 @@ class TextBuilderTest {
     @Test
     fun `test multiple appends keep order`() {
         val text = TextBuilder()
-            .append("Liquid".asPlainText(ChatFormatting.BLUE))
-            .append("Bounce".asPlainText(ChatFormatting.AQUA))
+            .append("Coffee".asPlainText(ChatFormatting.BLUE))
+            .append(" V2".asPlainText(ChatFormatting.AQUA))
             .append(" Client".asPlainText(ChatFormatting.GRAY))
             .build()
 
-        assertEquals("Coffee Client", text.string)
+        assertEquals("Coffee V2 Client", text.string)
     }
 
 }
