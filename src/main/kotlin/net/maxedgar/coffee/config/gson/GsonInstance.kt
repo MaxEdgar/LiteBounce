@@ -22,7 +22,7 @@ package net.maxedgar.coffee.config.gson
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.mojang.blaze3d.platform.InputConstants
-import net.maxedgar.coffee.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.maxedgar.coffee.config.gson.adapter.CodecBasedAdapter
 import net.maxedgar.coffee.config.gson.adapter.ColorAdapter
 import net.maxedgar.coffee.config.gson.adapter.IdentifierWithRegistryAdapter

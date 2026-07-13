@@ -25,7 +25,7 @@ import net.maxedgar.coffee.api.models.auth.OAuthSession
 import net.maxedgar.coffee.api.models.auth.addAuth
 import net.maxedgar.coffee.api.models.cosmetics.Cosmetic
 import net.maxedgar.coffee.api.models.user.UserInformation
-import net.maxedgar.coffee.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import java.util.UUID
 
 /**

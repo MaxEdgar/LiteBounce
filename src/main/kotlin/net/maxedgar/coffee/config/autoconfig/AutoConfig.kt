@@ -24,8 +24,8 @@ import net.maxedgar.coffee.api.models.client.AutoSettings
 import net.maxedgar.coffee.api.services.client.ClientApi
 import net.maxedgar.coffee.api.types.enums.AutoSettingsStatusType
 import net.maxedgar.coffee.api.types.enums.AutoSettingsType
-import net.maxedgar.coffee.authlib.utils.obj
-import net.maxedgar.coffee.authlib.utils.string
+import net.ccbluex.liquidbounce.authlib.utils.obj
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.maxedgar.coffee.config.ConfigSystem
 import net.maxedgar.coffee.config.ConfigSystem.deserializeValueGroup
 import net.maxedgar.coffee.config.gson.publicGson

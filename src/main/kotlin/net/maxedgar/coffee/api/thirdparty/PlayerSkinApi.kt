@@ -22,7 +22,7 @@ package net.maxedgar.coffee.api.thirdparty
 import com.google.gson.JsonObject
 import net.maxedgar.coffee.api.core.BaseApi
 import net.maxedgar.coffee.api.core.HttpClient
-import net.maxedgar.coffee.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.maxedgar.coffee.config.gson.serializer.minecraft.accountType
 import net.maxedgar.coffee.utils.client.mc
 import net.minecraft.world.entity.player.PlayerModelType

@@ -21,12 +21,12 @@ package net.maxedgar.coffee.features.account
 
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import net.maxedgar.coffee.authlib.account.AlteningAccount
-import net.maxedgar.coffee.authlib.account.CrackedAccount
-import net.maxedgar.coffee.authlib.account.MicrosoftAccount
-import net.maxedgar.coffee.authlib.account.MinecraftAccount
-import net.maxedgar.coffee.authlib.account.SessionAccount
-import net.maxedgar.coffee.authlib.yggdrasil.clientIdentifier
+import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
+import net.ccbluex.liquidbounce.authlib.account.CrackedAccount
+import net.ccbluex.liquidbounce.authlib.account.MicrosoftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.SessionAccount
+import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.maxedgar.coffee.config.ConfigSystem
 import net.maxedgar.coffee.config.types.Config
 import net.maxedgar.coffee.config.types.ValueType

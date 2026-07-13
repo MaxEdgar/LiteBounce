@@ -26,8 +26,8 @@ import net.maxedgar.coffee.api.core.parse
 import net.maxedgar.coffee.api.thirdparty.translator.TranslateLanguage
 import net.maxedgar.coffee.api.thirdparty.translator.TranslationResult
 import net.maxedgar.coffee.api.thirdparty.translator.TranslatorMode
-import net.maxedgar.coffee.authlib.utils.array
-import net.maxedgar.coffee.authlib.utils.string
+import net.ccbluex.liquidbounce.authlib.utils.array
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.maxedgar.coffee.config.types.group.ModeValueGroup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 

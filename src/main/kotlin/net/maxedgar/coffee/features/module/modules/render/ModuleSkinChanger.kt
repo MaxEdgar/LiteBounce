@@ -39,8 +39,8 @@ import net.maxedgar.coffee.api.core.HttpException
 import net.maxedgar.coffee.api.core.ioScope
 import net.maxedgar.coffee.api.core.renderScope
 import net.maxedgar.coffee.api.thirdparty.PlayerSkinApi
-import net.maxedgar.coffee.authlib.utils.generateOfflinePlayerUuid
-import net.maxedgar.coffee.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
+import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.maxedgar.coffee.config.gson.serializer.minecraft.accountType
 import net.maxedgar.coffee.config.types.group.ModeValueGroup
 import net.maxedgar.coffee.config.types.list.Tagged

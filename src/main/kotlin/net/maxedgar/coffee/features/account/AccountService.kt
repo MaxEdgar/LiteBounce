@@ -19,11 +19,11 @@
 
 package net.maxedgar.coffee.features.account
 
-import net.maxedgar.coffee.authlib.account.AlteningAccount
-import net.maxedgar.coffee.authlib.account.CrackedAccount
-import net.maxedgar.coffee.authlib.account.MicrosoftAccount
-import net.maxedgar.coffee.authlib.account.MinecraftAccount
-import net.maxedgar.coffee.authlib.account.SessionAccount
+import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
+import net.ccbluex.liquidbounce.authlib.account.CrackedAccount
+import net.ccbluex.liquidbounce.authlib.account.MicrosoftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.SessionAccount
 import net.maxedgar.coffee.config.types.list.Tagged
 
 enum class AccountService(override val tag: String, val canJoinOnline: Boolean) : Tagged {

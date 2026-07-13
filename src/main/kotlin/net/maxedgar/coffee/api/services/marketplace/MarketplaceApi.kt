@@ -31,7 +31,7 @@ import net.maxedgar.coffee.api.models.marketplace.MarketplaceItemType
 import net.maxedgar.coffee.api.models.marketplace.MarketplaceReview
 import net.maxedgar.coffee.api.models.marketplace.MarketplaceRevisionDependency
 import net.maxedgar.coffee.api.models.pagination.PaginatedResponse
-import net.maxedgar.coffee.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.maxedgar.coffee.config.gson.publicGson
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody

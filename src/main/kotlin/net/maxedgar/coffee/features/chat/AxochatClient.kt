@@ -45,7 +45,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import net.maxedgar.coffee.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.maxedgar.coffee.event.EventManager
 import net.maxedgar.coffee.event.events.ClientChatErrorEvent
 import net.maxedgar.coffee.event.events.ClientChatJwtTokenEvent

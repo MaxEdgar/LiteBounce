@@ -26,8 +26,8 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
-import net.maxedgar.coffee.authlib.utils.array
-import net.maxedgar.coffee.authlib.utils.string
+import net.ccbluex.liquidbounce.authlib.utils.array
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.maxedgar.coffee.config.types.list.Tagged
 import net.maxedgar.coffee.utils.input.InputBind
 import java.lang.reflect.Type

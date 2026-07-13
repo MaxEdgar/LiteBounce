@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.maxedgar.coffee.api.core.BaseApi
 import net.maxedgar.coffee.api.core.HttpException
-import net.maxedgar.coffee.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.maxedgar.coffee.utils.client.logger
 
 const val OPENAI_BASE_URL = "https://api.openai.com/v1"

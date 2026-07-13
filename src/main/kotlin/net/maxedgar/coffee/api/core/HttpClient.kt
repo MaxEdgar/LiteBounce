@@ -27,8 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.maxedgar.coffee.Coffee
 import net.maxedgar.coffee.api.interceptors.CacheBlacklistInterceptor
-import net.maxedgar.coffee.authlib.Authlib
-import net.maxedgar.coffee.authlib.interceptor.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.authlib.Authlib
+import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
 import net.maxedgar.coffee.config.gson.util.readJson
 import net.maxedgar.coffee.utils.client.error.ErrorHandler
 import net.maxedgar.coffee.utils.client.logger
