@@ -299,7 +299,7 @@ object ServerObserver : EventListener {
     }
 
     /**
-     * Reference: https://github.com/MaxEdgar/CoffeeV2/blob/legacy/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt
+     * Reference: https://github.com/MaxEdgar/CoffeeV2/blob/legacy/src/main/java/net/maxedgar/coffee/features/module/modules/misc/AnticheatDetector.kt
      * @author RtxOP
      */
     fun guessAntiCheat(address: String?): String? {

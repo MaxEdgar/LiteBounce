@@ -27,5 +27,5 @@ import net.maxedgar.coffee.features.module.ModuleCategories
  * Stops the levitation and slow falling effect.
  */
 object ModuleAntiLevitation : ClientModule("AntiLevitation", ModuleCategories.MOVEMENT) {
-    // @see net/ccbluex/liquidbounce/injection/mixins/minecraft/entity/MixinLivingEntity hookTravelStatusEffect
+    // @see net/maxedgar/coffee/injection/mixins/minecraft/entity/MixinLivingEntity hookTravelStatusEffect
 }
