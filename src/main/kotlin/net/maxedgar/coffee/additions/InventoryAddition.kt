@@ -27,8 +27,8 @@ interface InventoryAddition {
     /**
      * @return the actual selected slot without any modification by [net.maxedgar.coffee.utils.client.SilentHotbar]
      */
-    fun `liquid_bounce$getRealSelectedSlot`(): Int
+    fun `coffee$getRealSelectedSlot`(): Int
 }
 
 inline val Inventory.realSelectedSlot: Int
-    get() = (this as InventoryAddition).`liquid_bounce$getRealSelectedSlot`()
+    get() = (this as InventoryAddition).`coffee$getRealSelectedSlot`()

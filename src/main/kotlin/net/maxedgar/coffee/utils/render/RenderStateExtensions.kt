@@ -31,11 +31,11 @@ import net.minecraft.world.entity.Entity
 import kotlin.math.roundToInt
 
 inline val EntityRenderState.entity: Entity?
-    get() = (this as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+    get() = (this as EntityRenderStateAddition).`coffee$getEntity`()
 
 inline var EntityRenderState.isCustom: Boolean
-    get() = (this as EntityRenderStateAddition).`liquid_bounce$isCustom`()
-    set(value) = (this as EntityRenderStateAddition).`liquid_bounce$setCustom`(value)
+    get() = (this as EntityRenderStateAddition).`coffee$isCustom`()
+    set(value) = (this as EntityRenderStateAddition).`coffee$setCustom`(value)
 
 fun EntityRenderState.scaleLightCoords(scale: Float) {
     val block = (LightCoordsUtil.block(this.lightCoords) * scale).roundToInt().coerceIn(0, 15)

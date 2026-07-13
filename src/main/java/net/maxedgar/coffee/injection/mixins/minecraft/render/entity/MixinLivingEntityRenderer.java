@@ -189,7 +189,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     ) {
         if (original == null) return null;
 
-        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
+        var entity = ((EntityRenderStateAddition) state).coffee$getEntity();
         return ModuleChams.INSTANCE.remapIfNeeded(original, entity);
     }
 

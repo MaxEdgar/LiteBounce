@@ -63,7 +63,7 @@ public interface MixinRenderSetupAccessor {
     LayeringTransform getLayeringTransform();
 
     @Invoker("<init>")
-    static RenderSetup liquid_bounce$invokeInit(
+    static RenderSetup coffee$invokeInit(
         RenderPipeline pipeline,
         Map<String, Object> textures,
         boolean useLightmap,

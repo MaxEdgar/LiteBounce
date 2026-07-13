@@ -51,7 +51,7 @@ public abstract class MixinItemInHandLayer {
         Operation<Void> original,
         @Local(argsOnly = true, name = "state") ArmedEntityRenderState state
     ) {
-        ModuleChams.INSTANCE.withHeldItemContext(((EntityRenderStateAddition) state).liquid_bounce$getEntity(),
+        ModuleChams.INSTANCE.withHeldItemContext(((EntityRenderStateAddition) state).coffee$getEntity(),
             () -> original.call(instance, poseStack, submitNodeCollector, lightCoords, overlayCoords, outlineColor));
     }
 

@@ -156,7 +156,7 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
     val color = it.color ?: TextColor.fromLegacyFormat(ChatFormatting.RESET)
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    val newColor = (color as TextColorAddition).`liquid_bounce$withNameProtectionBypass`()
+    val newColor = (color as TextColorAddition).`coffee$withNameProtectionBypass`()
 
     it.withColor(newColor)
 }
@@ -243,4 +243,4 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 
 val TextColor.bypassesNameProtection: Boolean
     @Suppress("CAST_NEVER_SUCCEEDS")
-    get() = (this as TextColorAddition).`liquid_bounce$doesBypassingNameProtect`()
+    get() = (this as TextColorAddition).`coffee$doesBypassingNameProtect`()

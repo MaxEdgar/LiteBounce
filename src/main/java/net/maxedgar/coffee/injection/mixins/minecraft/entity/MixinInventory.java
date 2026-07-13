@@ -54,7 +54,7 @@ public abstract class MixinInventory implements InventoryAddition {
 
     @Unique
     @Override
-    public int liquid_bounce$getRealSelectedSlot() {
+    public int coffee$getRealSelectedSlot() {
         return this.selected;
     }
 }

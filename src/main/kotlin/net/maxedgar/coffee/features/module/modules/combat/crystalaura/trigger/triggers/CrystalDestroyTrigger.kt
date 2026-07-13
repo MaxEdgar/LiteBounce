@@ -52,12 +52,12 @@ object CrystalDestroyTrigger : PostPacketTrigger<ClientboundRemoveEntitiesPacket
 
         // mark the packet
         if (containsRelevantCrystal) {
-            (packet as ClientboundRemoveEntitiesPacketAddition).`liquid_bounce$setContainsCrystal`()
+            (packet as ClientboundRemoveEntitiesPacketAddition).`coffee$setContainsCrystal`()
         }
     }
 
     override fun postPacketHandler(packet: ClientboundRemoveEntitiesPacket) {
-        val packetNotRelevant = !(packet as ClientboundRemoveEntitiesPacketAddition).`liquid_bounce$containsCrystal`()
+        val packetNotRelevant = !(packet as ClientboundRemoveEntitiesPacketAddition).`coffee$containsCrystal`()
         if (packetNotRelevant) {
             return
         }

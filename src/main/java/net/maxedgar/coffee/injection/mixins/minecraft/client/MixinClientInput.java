@@ -53,17 +53,17 @@ public abstract class MixinClientInput implements ClientInputAddition {
     }
 
     @Override
-    public void liquid_bounce$setMovementInput(Vec2 movementVector) {
+    public void coffee$setMovementInput(Vec2 movementVector) {
         this.moveVector = movementVector;
     }
 
     @Override
-    public Input liquid_bounce$getInitial() {
+    public Input coffee$getInitial() {
         return initial;
     }
 
     @Override
-    public Input liquid_bounce$getUntransformed() {
+    public Input coffee$getUntransformed() {
         return untransformed;
     }
 

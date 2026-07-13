@@ -46,7 +46,7 @@ public abstract class MixinEquipmentLayerRenderer {
         @Local(argsOnly = true, name = "state") S state
     ) {
         if (state instanceof LivingEntityRenderState livingState) {
-            Entity entity = ((EntityRenderStateAddition) livingState).liquid_bounce$getEntity();
+            Entity entity = ((EntityRenderStateAddition) livingState).coffee$getEntity();
             return ModuleChams.INSTANCE.remapIfNeeded(renderType, entity);
         }
 

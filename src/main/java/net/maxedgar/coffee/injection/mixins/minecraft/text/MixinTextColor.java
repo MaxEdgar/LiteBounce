@@ -44,28 +44,28 @@ public abstract class MixinTextColor implements TextColorAddition {
     private boolean bypassesNameProtect = false;
 
     @Override
-    public boolean liquid_bounce$doesBypassingNameProtect() {
+    public boolean coffee$doesBypassingNameProtect() {
         return bypassesNameProtect;
     }
 
     @Override
-    public TextColor liquid_bounce$withNameProtectionBypass() {
+    public TextColor coffee$withNameProtectionBypass() {
         var textColor = new TextColor(this.value, this.name);
 
-        ((TextColorAddition) ((Object) textColor)).liquid_bounce$setBypassingNameProtection(true);
+        ((TextColorAddition) ((Object) textColor)).coffee$setBypassingNameProtection(true);
 
         return textColor;
     }
 
     @Override
-    public void liquid_bounce$setBypassingNameProtection(boolean bypassesNameProtect) {
+    public void coffee$setBypassingNameProtection(boolean bypassesNameProtect) {
         this.bypassesNameProtect = bypassesNameProtect;
     }
 
     @Inject(method = "equals", at = @At("RETURN"), cancellable = true)
     private void equals(Object o, CallbackInfoReturnable<Boolean> cir) {
         if (o instanceof TextColor) {
-            if (this.bypassesNameProtect != ((TextColorAddition) o).liquid_bounce$doesBypassingNameProtect()) {
+            if (this.bypassesNameProtect != ((TextColorAddition) o).coffee$doesBypassingNameProtect()) {
                 cir.setReturnValue(false);
             }
         }

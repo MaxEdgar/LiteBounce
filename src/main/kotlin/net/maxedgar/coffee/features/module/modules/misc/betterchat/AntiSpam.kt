@@ -70,12 +70,12 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
             chatText += text
 
             val other = mc.gui.hud.chat.allMessages.find {
-                (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
+                (it as GuiMessageLineAddition).`coffee$getId`() == id
             }
 
             var count = 1
             other?.let {
-                count += (other as GuiMessageAddition).`liquid_bounce$getCount`()
+                count += (other as GuiMessageAddition).`coffee$getCount`()
                 chatText += " [$count]".asPlainText(ChatFormatting.GRAY)
             }
 

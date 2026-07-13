@@ -221,12 +221,12 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
     @Suppress("CAST_NEVER_SUCCEEDS")
     @JvmStatic
     fun resolveMessageBounds(visibleMessages: List<GuiMessage.Line>, index: Int): IntRange {
-        val id = (visibleMessages[index] as GuiMessageLineAddition).`liquid_bounce$getId`()
+        val id = (visibleMessages[index] as GuiMessageLineAddition).`coffee$getId`()
 
         if (id != null) {
             var start = index
             while (start > 0) {
-                val previousId = (visibleMessages[start - 1] as GuiMessageLineAddition).`liquid_bounce$getId`()
+                val previousId = (visibleMessages[start - 1] as GuiMessageLineAddition).`coffee$getId`()
                 if (id != previousId) {
                     break
                 }
@@ -236,7 +236,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
             var end = index
             val lastIndex = visibleMessages.size - 1
             while (end < lastIndex) {
-                val nextId = (visibleMessages[end + 1] as GuiMessageLineAddition).`liquid_bounce$getId`()
+                val nextId = (visibleMessages[end + 1] as GuiMessageLineAddition).`coffee$getId`()
                 if (id != nextId) {
                     break
                 }

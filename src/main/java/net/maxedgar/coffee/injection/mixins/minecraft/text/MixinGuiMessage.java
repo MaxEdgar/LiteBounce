@@ -29,33 +29,33 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class MixinGuiMessage implements GuiMessageLineAddition, GuiMessageAddition {
 
     @Unique
-    private @Nullable String liquid_bounce$id = null;
+    private @Nullable String coffee$id = null;
 
     @Unique
-    private int liquid_bounce$count = 1;
+    private int coffee$count = 1;
 
     @Unique
     @Override
-    public void liquid_bounce$setId(@Nullable String id) {
-        this.liquid_bounce$id = id;
+    public void coffee$setId(@Nullable String id) {
+        this.coffee$id = id;
     }
 
     @Unique
     @Override
-    public @Nullable String liquid_bounce$getId() {
-        return liquid_bounce$id;
+    public @Nullable String coffee$getId() {
+        return coffee$id;
     }
 
     @Unique
     @Override
-    public void liquid_bounce$setCount(int count) {
-        this.liquid_bounce$count = count;
+    public void coffee$setCount(int count) {
+        this.coffee$count = count;
     }
 
     @Unique
     @Override
-    public int liquid_bounce$getCount() {
-        return liquid_bounce$count;
+    public int coffee$getCount() {
+        return coffee$count;
     }
 
 }

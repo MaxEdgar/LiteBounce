@@ -29,12 +29,12 @@ public interface GuiMessageAddition {
      * Sets the count of the message.
      * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
      */
-    void liquid_bounce$setCount(int count);
+    void coffee$setCount(int count);
 
     /**
      * Gets the count stored in this line.
      */
     @SuppressWarnings("unused")
-    int liquid_bounce$getCount();
+    int coffee$getCount();
 
 }

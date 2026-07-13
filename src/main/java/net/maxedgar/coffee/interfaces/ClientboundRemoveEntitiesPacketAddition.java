@@ -31,12 +31,12 @@ public interface ClientboundRemoveEntitiesPacketAddition {
      * Flags the packet as containing a crystal.
      */
     @SuppressWarnings("unused")
-    void liquid_bounce$setContainsCrystal();
+    void coffee$setContainsCrystal();
 
     /**
      * Checks if the packet contains a crystal.
      */
     @SuppressWarnings("unused")
-    boolean liquid_bounce$containsCrystal();
+    boolean coffee$containsCrystal();
 
 }

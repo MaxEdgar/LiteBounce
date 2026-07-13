@@ -26,8 +26,8 @@ public interface ClientInputAddition {
     /**
      * @param movementVector x -> movementSideways; y -> movementForward
      */
-    void liquid_bounce$setMovementInput(Vec2 movementVector);
+    void coffee$setMovementInput(Vec2 movementVector);
 
-    Input liquid_bounce$getInitial();
-    Input liquid_bounce$getUntransformed();
+    Input coffee$getInitial();
+    Input coffee$getUntransformed();
 }

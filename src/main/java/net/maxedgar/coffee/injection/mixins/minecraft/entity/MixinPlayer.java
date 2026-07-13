@@ -79,7 +79,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = {"causeExtraKnockback",
         "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float hookFixRotation(float original) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!coffee$isClientPlayer()) {
             return original;
         }
 
@@ -103,7 +103,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @Inject(method = "isMobilityRestricted", at = @At("HEAD"), cancellable = true)
     private void hookSprintIgnoreBlindness(CallbackInfoReturnable<Boolean> cir) {
-        if (liquid_bounce$isClientPlayer() && ModuleSprint.INSTANCE.getShouldIgnoreBlindness()) {
+        if (coffee$isClientPlayer() && ModuleSprint.INSTANCE.getShouldIgnoreBlindness()) {
             cir.setReturnValue(false);
         }
     }
@@ -122,7 +122,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;hasEffect(Lnet/minecraft/core/Holder;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getMiningFatigue()) {
+        if (coffee$isClientPlayer() && ModuleNoSlowBreak.getMiningFatigue()) {
             return false;
         }
 
@@ -133,7 +133,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;isEyeInFluid(Lnet/minecraft/tags/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer() && ModuleNoSlowBreak.getWater()) {
+        if (coffee$isClientPlayer() && ModuleNoSlowBreak.getWater()) {
             return false;
         }
 
@@ -143,7 +143,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/player/Player;onGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (coffee$isClientPlayer()) {
             if (ModuleNoSlowBreak.getOnAir()) {
                 return true;
             }
@@ -162,7 +162,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyArgs(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;multiply(DDD)Lnet/minecraft/world/phys/Vec3;"))
     private void hookSlowVelocity(Args args) {
-        if (liquid_bounce$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
+        if (coffee$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
             double motion = ModuleKeepSprint.INSTANCE.getMotion();
             args.set(0, motion); // x
             args.set(2, motion); // z
@@ -174,7 +174,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
      */
     @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V", ordinal = 0))
     private boolean hookSlowVelocity(Player instance, boolean b) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (coffee$isClientPlayer()) {
             ModuleKeepSprint.INSTANCE.setSprinting(b);
             return !ModuleKeepSprint.INSTANCE.getRunning() || b;
         }
@@ -184,7 +184,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isSprinting()Z"))
     private boolean hookSlowVelocity(boolean original) {
-        if (liquid_bounce$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
+        if (coffee$isClientPlayer() && ModuleKeepSprint.INSTANCE.getRunning()) {
             return ModuleKeepSprint.INSTANCE.getSprinting();
         }
 
@@ -193,7 +193,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyReturnValue(method = "entityInteractionRange", at = @At("RETURN"))
     private double hookEntityInteractionRange(double original) {
-        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
+        if (coffee$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getEntity().getInteractionRange();
         }
 
@@ -202,7 +202,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyReturnValue(method = "blockInteractionRange", at = @At("RETURN"))
     private double hookBlockInteractionRange(double original) {
-        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
+        if (coffee$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getBlockRangeIncrease() + original;
         }
 
@@ -211,7 +211,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
     @ModifyExpressionValue(method = "getCurrentItemAttackStrengthDelay", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
     private double hookAutoWeaponAttackSpeed(double original) {
-        if (liquid_bounce$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
+        if (coffee$isClientPlayer() && ModuleReach.INSTANCE.getRunning()) {
             return original;
         }
 
@@ -225,21 +225,21 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 0))
     private void hookPlaySound(Entity target, CallbackInfo ci) {
         if (!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_KNOCKBACK);
+            coffee$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_KNOCKBACK);
         }
     }
 
     @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 1))
     private void hookPlaySound1(Entity target, CallbackInfo ci) {
         if (!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_NODAMAGE);
+            coffee$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_NODAMAGE);
         }
     }
 
     @Inject(method = "attackVisualEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 0))
     private void hookPlaySound2(Entity target, boolean criticalHit, boolean sweeping, boolean cooldownPassed, boolean pierce, float enchantDamage, CallbackInfo ci) {
         if (!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_CRIT);
+            coffee$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_CRIT);
         }
 
     }
@@ -247,14 +247,14 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @Inject(method = "attackVisualEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 1))
     private void hookPlaySound3(Entity target, boolean criticalHit, boolean sweeping, boolean cooldownPassed, boolean pierce, float enchantDamage, CallbackInfo ci) {
         if(!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, cooldownPassed ? SoundEvents.PLAYER_ATTACK_STRONG : SoundEvents.PLAYER_ATTACK_WEAK);
+            coffee$playSoundIfFakePlayer(target, cooldownPassed ? SoundEvents.PLAYER_ATTACK_STRONG : SoundEvents.PLAYER_ATTACK_WEAK);
         }
     }
 
     @Inject(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 0))
     private void hookPlaySound4(Entity target, float damage, DamageSource damageSource, float cooldownProgress, CallbackInfo ci) {
         if(!ModuleHitFX.INSTANCE.getRunning()) {
-            liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_SWEEP);
+            coffee$playSoundIfFakePlayer(target, SoundEvents.PLAYER_ATTACK_SWEEP);
         }
     }
 
@@ -262,7 +262,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
      * When the target is a fake player, this method will play a client side sound.
      */
     @Unique
-    private void liquid_bounce$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
+    private void coffee$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
         if (target instanceof FakePlayer) {
             level().playSound(Player.class.cast(this), getX(), getY(), getZ(), soundEvent, getSoundSource(), 1F, 1F);
         }

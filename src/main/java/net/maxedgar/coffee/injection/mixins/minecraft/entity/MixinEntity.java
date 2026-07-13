@@ -76,7 +76,7 @@ public abstract class MixinEntity {
     @Shadow public abstract float getYRot();
 
     @Unique
-    protected boolean liquid_bounce$isClientPlayer() {
+    protected boolean coffee$isClientPlayer() {
         return (Object) this == Minecraft.getInstance().player;
     }
 
@@ -122,7 +122,7 @@ public abstract class MixinEntity {
 
     @ModifyExpressionValue(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"))
     public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true, name = "input") Vec3 input, @Local(argsOnly = true, name = "speed") float speed) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!coffee$isClientPlayer()) {
             return original;
         }
 
@@ -133,7 +133,7 @@ public abstract class MixinEntity {
 
     @ModifyExpressionValue(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;maxUpStep()F"))
     private float hookStepHeight(float original) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!coffee$isClientPlayer()) {
             return original;
         }
 
@@ -145,7 +145,7 @@ public abstract class MixinEntity {
     @Inject(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
             at = @At(value = "RETURN", ordinal = 0), cancellable = true)
     private void hookStepHeight(Vec3 movement, CallbackInfoReturnable<Vec3> cir) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (coffee$isClientPlayer()) {
             PlayerStepSuccessEvent movementCollisionsEvent = new PlayerStepSuccessEvent(movement, cir.getReturnValue());
             EventManager.INSTANCE.callEvent(movementCollisionsEvent);
             cir.setReturnValue(movementCollisionsEvent.getAdjustedVec());
@@ -169,7 +169,7 @@ public abstract class MixinEntity {
      */
     @Inject(method = "setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"), cancellable = true)
     private void hookVelocityDuringRidingPrevention(Vec3 velocity, CallbackInfo ci) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!coffee$isClientPlayer()) {
             return;
         }
 
@@ -180,7 +180,7 @@ public abstract class MixinEntity {
 
     @Inject(method = "isEyeInFluid", at = @At("HEAD"), cancellable = true)
     private void hookIsSubmergedIn(TagKey<Fluid> fluidTag, CallbackInfoReturnable<Boolean> cir) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (coffee$isClientPlayer()) {
             var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionCheckEvent(fluidTag));
 
             if (event.isCancelled()) {
@@ -205,7 +205,7 @@ public abstract class MixinEntity {
      */
     @ModifyExpressionValue(method = "isLocalInstanceAuthoritative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;isClientAuthoritative()Z"))
     private boolean fixFallDistanceCalculation(boolean original) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (coffee$isClientPlayer()) {
             return false;
         }
 
@@ -215,7 +215,7 @@ public abstract class MixinEntity {
     @Inject(method = "setPose", at = @At("HEAD"), cancellable = true)
     private void setPose(Pose pose, CallbackInfo ci) {
         /* Cancel pose if needed */
-        if (liquid_bounce$isClientPlayer() && ModuleNoPose.INSTANCE.shouldCancelPose(pose))
+        if (coffee$isClientPlayer() && ModuleNoPose.INSTANCE.shouldCancelPose(pose))
             ci.cancel();
     }
 }

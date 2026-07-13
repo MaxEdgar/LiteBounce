@@ -22,12 +22,12 @@ package net.maxedgar.coffee.interfaces;
 import net.minecraft.network.chat.TextColor;
 
 public interface TextColorAddition {
-    boolean liquid_bounce$doesBypassingNameProtect();
-    TextColor liquid_bounce$withNameProtectionBypass();
+    boolean coffee$doesBypassingNameProtect();
+    TextColor coffee$withNameProtectionBypass();
 
     /**
      * Please don't use this method, it is only for internal use.
      */
     @Deprecated
-    void liquid_bounce$setBypassingNameProtection(boolean bypassesNameProtect);
+    void coffee$setBypassingNameProtection(boolean bypassesNameProtect);
 }

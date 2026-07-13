@@ -27,18 +27,18 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class MixinClientboundRemoveEntitiesPacket implements ClientboundRemoveEntitiesPacketAddition {
 
     @Unique
-    private boolean liquid_bounce$containsCrystal;
+    private boolean coffee$containsCrystal;
 
     @Unique
     @Override
-    public void liquid_bounce$setContainsCrystal() {
-        this.liquid_bounce$containsCrystal = true;
+    public void coffee$setContainsCrystal() {
+        this.coffee$containsCrystal = true;
     }
 
     @Unique
     @Override
-    public boolean liquid_bounce$containsCrystal() {
-        return this.liquid_bounce$containsCrystal;
+    public boolean coffee$containsCrystal() {
+        return this.coffee$containsCrystal;
     }
 
 }

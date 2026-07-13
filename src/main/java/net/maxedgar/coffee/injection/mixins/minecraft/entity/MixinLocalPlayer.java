@@ -207,12 +207,12 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     }
 
     @Override
-    public int liquid_bounce$getOnGroundTicks() {
+    public int coffee$getOnGroundTicks() {
         return onGroundTicks;
     }
 
     @Override
-    public int liquid_bounce$getAirTicks() {
+    public int coffee$getAirTicks() {
         return airTicks;
     }
 
@@ -413,7 +413,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
 
     @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
     private boolean hookForceStopSprinting(boolean shouldStop) {
-        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+        return shouldStop || coffee$shouldForceStopSprinting();
     }
 
     /**
@@ -427,11 +427,11 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
     )
     private boolean hookVfpSprintStop(boolean shouldStop) {
-        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+        return shouldStop || coffee$shouldForceStopSprinting();
     }
 
     @Unique
-    private boolean liquid_bounce$shouldForceStopSprinting() {
+    private boolean coffee$shouldForceStopSprinting() {
         var event = new SprintEvent(
             new DirectionalInput(input),
             true,

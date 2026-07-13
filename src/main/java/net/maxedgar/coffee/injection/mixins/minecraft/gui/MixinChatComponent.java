@@ -110,7 +110,7 @@ public abstract class MixinChatComponent {
         var focused = isChatFocused();
         var removable = ((GuiMessageLineAddition) (Object) message);
         //noinspection DataFlowIssue
-        var id = removable.liquid_bounce$getId();
+        var id = removable.coffee$getId();
 
         for (int j = 0; j < lines.size(); ++j) {
             FormattedCharSequence orderedText = lines.get(j);
@@ -122,7 +122,7 @@ public abstract class MixinChatComponent {
             boolean last = j == lines.size() - 1;
             var visible = new GuiMessage.Line(message, orderedText, last);
             //noinspection DataFlowIssue
-            ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
+            ((GuiMessageLineAddition) (Object) visible).coffee$setId(id);
             trimmedMessages.addFirst(visible);
         }
 

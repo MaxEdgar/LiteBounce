@@ -51,7 +51,7 @@ public abstract class MixinLevelRenderer {
     public abstract RenderTarget entityOutlineTarget();
 
     @Unique
-    private boolean liquid_bounce$hasCustomOutlineMesh = false;
+    private boolean coffee$hasCustomOutlineMesh = false;
 
     // TODO: removed because of vanilla changes
 //    // After ModelViewMatrix setup
@@ -101,14 +101,14 @@ public abstract class MixinLevelRenderer {
             return;
         }
 
-        liquid_bounce$hasCustomOutlineMesh = false;
+        coffee$hasCustomOutlineMesh = false;
         var matrixStack = Pools.MatStack.borrow();
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
             minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false)
         );
         EventManager.INSTANCE.callEvent(event);
-        liquid_bounce$hasCustomOutlineMesh = event.getDirtyFlag();
+        coffee$hasCustomOutlineMesh = event.getDirtyFlag();
         Pools.MatStack.recycle(matrixStack);
     }
 
@@ -127,7 +127,7 @@ public abstract class MixinLevelRenderer {
         at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/LevelRenderState;shouldShowEntityOutlines:Z", opcode = Opcodes.GETFIELD)
     )
     private boolean includeCustomOutlines(boolean original) {
-        return original || liquid_bounce$hasCustomOutlineMesh;
+        return original || coffee$hasCustomOutlineMesh;
     }
 
     @ModifyExpressionValue(
@@ -135,7 +135,7 @@ public abstract class MixinLevelRenderer {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;hasAnyOutline()Z")
     )
     private boolean includeCustomOutlineTargetInMainPass(boolean original) {
-        return original || liquid_bounce$hasCustomOutlineMesh;
+        return original || coffee$hasCustomOutlineMesh;
     }
 
     @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)

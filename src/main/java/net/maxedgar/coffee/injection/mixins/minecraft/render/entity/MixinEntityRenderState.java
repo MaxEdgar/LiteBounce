@@ -28,30 +28,30 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class MixinEntityRenderState implements EntityRenderStateAddition {
 
     @Unique
-    private Entity liquid_bounce$entity;
+    private Entity coffee$entity;
 
     @Unique
-    private boolean liquid_bounce$isCustom = false;
+    private boolean coffee$isCustom = false;
 
     @Unique
     @Override
-    public void liquid_bounce$setEntity(Entity entity) {
-        this.liquid_bounce$entity = entity;
+    public void coffee$setEntity(Entity entity) {
+        this.coffee$entity = entity;
     }
 
     @Unique
     @Override
-    public Entity liquid_bounce$getEntity() {
-        return liquid_bounce$entity;
+    public Entity coffee$getEntity() {
+        return coffee$entity;
     }
 
     @Override
-    public boolean liquid_bounce$isCustom() {
-        return liquid_bounce$isCustom;
+    public boolean coffee$isCustom() {
+        return coffee$isCustom;
     }
 
     @Override
-    public void liquid_bounce$setCustom(boolean custom) {
-        liquid_bounce$isCustom = custom;
+    public void coffee$setCustom(boolean custom) {
+        coffee$isCustom = custom;
     }
 }

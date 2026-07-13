@@ -50,7 +50,7 @@ public abstract class MixinPlayerInfo {
 
     @ModifyReturnValue(method = "getSkin", at = @At("RETURN"))
     @SuppressWarnings({"ConstantConditions", "EqualsBetweenInconvertibleTypes", "RedundantCast"})
-    private PlayerSkin liquid_bounce$skin(PlayerSkin original) {
+    private PlayerSkin coffee$skin(PlayerSkin original) {
         if (HideAppearance.INSTANCE.isDestructed()) {
             return original;
         }
@@ -73,17 +73,17 @@ public abstract class MixinPlayerInfo {
                     original.elytra(), original.model(), original.secure());
         }
 
-        liquid_bounce$fetchCapeTexture();
+        coffee$fetchCapeTexture();
         return original;
     }
 
     @ModifyExpressionValue(method = "createSkinLookup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isLocalPlayer(Ljava/util/UUID;)Z"))
-    private static boolean liquid_bounce$allow_custom_skin(boolean b) {
+    private static boolean coffee$allow_custom_skin(boolean b) {
         return b || ModuleSkinChanger.INSTANCE.getRunning();
     }
 
     @Unique
-    private void liquid_bounce$fetchCapeTexture() {
+    private void coffee$fetchCapeTexture() {
         if (capeTextureLoading) {
             return;
         }

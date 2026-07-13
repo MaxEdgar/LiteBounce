@@ -36,7 +36,7 @@ public abstract class MixinDeadmau5EarsLayer {
     private boolean onRender(boolean original, @Local(argsOnly = true, name = "state") AvatarRenderState playerEntityRenderState) {
         if (original) return true;
 
-        var entity = ((EntityRenderStateAddition) playerEntityRenderState).liquid_bounce$getEntity();
+        var entity = ((EntityRenderStateAddition) playerEntityRenderState).coffee$getEntity();
         return entity != null && CosmeticService.INSTANCE.hasCosmetic(entity.getUUID(), CosmeticCategory.DEADMAU5_EARS);
     }
 

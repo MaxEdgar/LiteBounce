@@ -20,6 +20,6 @@
 package net.maxedgar.coffee.interfaces;
 
 public interface LocalPlayerAddition {
-    int liquid_bounce$getAirTicks();
-    int liquid_bounce$getOnGroundTicks();
+    int coffee$getAirTicks();
+    int coffee$getOnGroundTicks();
 }

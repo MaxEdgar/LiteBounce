@@ -25,7 +25,7 @@ import net.minecraft.client.renderer.rendertype.RenderSetup
 fun RenderSetup.withOutputTarget(outputTarget: OutputTarget): RenderSetup {
     this as MixinRenderSetupAccessor
 
-    return MixinRenderSetupAccessor.`liquid_bounce$invokeInit`(
+    return MixinRenderSetupAccessor.`coffee$invokeInit`(
         this.getPipeline(),
         this.getTextures(),
         this.getUseLightmap(),

@@ -44,7 +44,7 @@ public abstract class MixinVulkanRenderPass {
     protected VulkanRenderPipeline pipeline;
 
     @Unique
-    private @Nullable RenderPipeline liquid_bounce$previousPipeline;
+    private @Nullable RenderPipeline coffee$previousPipeline;
 
     @Shadow
     @Final
@@ -52,11 +52,11 @@ public abstract class MixinVulkanRenderPass {
 
     @Inject(method = "setPipeline", at = @At("HEAD"), cancellable = true)
     private void skipBindPipeline(RenderPipeline pipeline, CallbackInfo ci) {
-        if (pipeline == liquid_bounce$previousPipeline) {
+        if (pipeline == coffee$previousPipeline) {
             ci.cancel();
         }
 
-        this.liquid_bounce$previousPipeline = pipeline;
+        this.coffee$previousPipeline = pipeline;
     }
 
     @Inject(

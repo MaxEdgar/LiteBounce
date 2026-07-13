@@ -28,13 +28,13 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public interface EntityRenderStateAddition {
 
-    void liquid_bounce$setEntity(Entity entity);
+    void coffee$setEntity(Entity entity);
 
     @Nullable
-    Entity liquid_bounce$getEntity();
+    Entity coffee$getEntity();
 
-    boolean liquid_bounce$isCustom();
+    boolean coffee$isCustom();
 
-    void liquid_bounce$setCustom(boolean custom);
+    void coffee$setCustom(boolean custom);
 
 }

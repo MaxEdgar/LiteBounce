@@ -78,7 +78,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
     @Inject(method = "submit", at = @At("HEAD"))
     private void renderMobOwners(S state, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraState, CallbackInfo ci) {
-        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
+        var entity = ((EntityRenderStateAddition) state).coffee$getEntity();
         var ownerName = ModuleMobOwners.INSTANCE.getOwnerInfoText(entity);
 
         if (ownerName != null) {
@@ -128,16 +128,16 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
     @Inject(method = "extractRenderState", at = @At("HEAD"))
     private void hookInjectEntityIntoState(T entity, S state, float tickDelta, CallbackInfo ci) {
-        ((EntityRenderStateAddition) state).liquid_bounce$setEntity(entity);
+        ((EntityRenderStateAddition) state).coffee$setEntity(entity);
     }
 
     @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;shouldEntityAppearGlowing(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean modifyShouldRenderOutline(boolean original, @Local(argsOnly = true, name = "entity") Entity entity) {
-        return original || liquid_bounce$shouldRenderOutline(entity);
+        return original || coffee$shouldRenderOutline(entity);
     }
 
     @Unique
-    private static boolean liquid_bounce$shouldRenderOutline(Entity entity) {
+    private static boolean coffee$shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
         } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {

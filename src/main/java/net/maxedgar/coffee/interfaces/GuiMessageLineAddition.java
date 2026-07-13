@@ -30,11 +30,11 @@ public interface GuiMessageLineAddition {
      * Sets the ID for the chat message.
      * The ID will be used for removing chat messages.
      */
-    void liquid_bounce$setId(@Nullable String id);
+    void coffee$setId(@Nullable String id);
 
     /**
      * Gets the ID of the chat message.
      */
-    @Nullable String liquid_bounce$getId();
+    @Nullable String coffee$getId();
 
 }

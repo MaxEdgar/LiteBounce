@@ -50,8 +50,8 @@ private fun getTag() = if (mc.isSingleplayer) {
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
     val guiMessage = GuiMessage(mc.gui.hud.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
-    (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
-    (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
+    (guiMessage as GuiMessageLineAddition).`coffee$setId`(id)
+    (guiMessage as GuiMessageAddition).`coffee$setCount`(count)
     this.logChatMessage(guiMessage)
     this.addMessageToDisplayQueue(guiMessage)
     this.addMessageToQueue(guiMessage)
@@ -64,10 +64,10 @@ fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.e
 fun ChatComponent.removeMessage(id: String?) = mc.execute {
     allMessages.removeIf {
         val removable = it as? GuiMessageLineAddition ?: return@removeIf false
-        id == removable.`liquid_bounce$getId`()
+        id == removable.`coffee$getId`()
     }
     trimmedMessages.removeIf {
         val removable = it as? GuiMessageLineAddition ?: return@removeIf false
-        id == removable.`liquid_bounce$getId`()
+        id == removable.`coffee$getId`()
     }
 }

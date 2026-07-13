@@ -44,7 +44,7 @@ public abstract class MixinChatListener {
 
     @Inject(method = "lambda$handleDisguisedChatMessage$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/ChatType$Bound;decorate(Lnet/minecraft/network/chat/Component;)Lnet/minecraft/network/chat/Component;", shift = At.Shift.BEFORE), cancellable = true)
     private void injectDisguisedChatLambda(ChatType.Bound parameters, Component text, Instant instant, CallbackInfoReturnable<Boolean> cir) {
-        var result = liquid_bounce$emitChatEvent(parameters, text, ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE);
+        var result = coffee$emitChatEvent(parameters, text, ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE);
         if (result) {
             previousMessageTime = Util.getMillis();
             cir.cancel();
@@ -53,7 +53,7 @@ public abstract class MixinChatListener {
 
     @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addPlayerMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void injectChatMessage1(ChatType.Bound parameters, PlayerChatMessage message, Component decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
-        var result = liquid_bounce$emitChatEvent(null, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
+        var result = coffee$emitChatEvent(null, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
         if (result) {
             previousMessageTime = Util.getMillis();
             cir.cancel();
@@ -62,7 +62,7 @@ public abstract class MixinChatListener {
 
     @Inject(method = "showMessageToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;addPlayerMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
     private void injectChatMessage2(ChatType.Bound parameters, PlayerChatMessage message, Component decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
-        var result = liquid_bounce$emitChatEvent(parameters, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
+        var result = coffee$emitChatEvent(parameters, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
         if (result) {
             previousMessageTime = Util.getMillis();
             cir.cancel();
@@ -71,7 +71,7 @@ public abstract class MixinChatListener {
 
     @Inject(method = "handleSystemMessage", at = @At(value = "HEAD"), cancellable = true)
     private void injectGameMessage(Component message, boolean overlay, CallbackInfo ci) {
-        var result = liquid_bounce$emitChatEvent(null, message, overlay ? ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE : ChatReceiveEvent.ChatType.GAME_MESSAGE);
+        var result = coffee$emitChatEvent(null, message, overlay ? ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE : ChatReceiveEvent.ChatType.GAME_MESSAGE);
         if (result) {
             previousMessageTime = Util.getMillis();
             ci.cancel();
@@ -79,7 +79,7 @@ public abstract class MixinChatListener {
     }
 
     @Unique
-    private boolean liquid_bounce$emitChatEvent(ChatType.Bound parameters, Component text, ChatReceiveEvent.ChatType type) {
+    private boolean coffee$emitChatEvent(ChatType.Bound parameters, Component text, ChatReceiveEvent.ChatType type) {
         var event = new ChatReceiveEvent(text.getString(), text, type, inputText -> {
             if (parameters != null) {
                 return parameters.decorate(text);

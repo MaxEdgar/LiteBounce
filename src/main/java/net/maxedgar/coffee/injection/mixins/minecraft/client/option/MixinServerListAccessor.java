@@ -28,5 +28,5 @@ import java.util.List;
 @Mixin(ServerList.class)
 public interface MixinServerListAccessor {
     @Accessor("serverList")
-    List<ServerData> liquid_bounce$getServerList();
+    List<ServerData> coffee$getServerList();
 }

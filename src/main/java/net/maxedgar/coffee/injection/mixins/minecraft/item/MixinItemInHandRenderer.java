@@ -90,7 +90,7 @@ public abstract class MixinItemInHandRenderer {
             ModuleAnimations.MainHand mainHand = ModuleAnimations.MainHand.INSTANCE;
             ModuleAnimations.OffHand offHand = ModuleAnimations.OffHand.INSTANCE;
             if (isInBothHands && mainHand.getRunning() && offHand.getRunning()) {
-                liquid_bounce$applyTransformations(poseStack,
+                coffee$applyTransformations(poseStack,
                         (mainHand.getMainHandX() + offHand.getOffHandX()) / 2f,
                         (mainHand.getMainHandY() + offHand.getOffHandY()) / 2f,
                         (mainHand.getMainHandItemScale() + offHand.getOffHandItemScale()) / 2f,
@@ -101,15 +101,15 @@ public abstract class MixinItemInHandRenderer {
             } else if (isInBothHands && mainHand.getRunning()) {
                 poseStack.translate(0f, 0f, mainHand.getMainHandItemScale());
             } else if (InteractionHand.MAIN_HAND == hand && mainHand.getRunning()) {
-                liquid_bounce$applyTransformations(poseStack, mainHand.getMainHandX(), mainHand.getMainHandY(), mainHand.getMainHandItemScale(), mainHand.getMainHandPositiveX(), mainHand.getMainHandPositiveY(), mainHand.getMainHandPositiveZ());
+                coffee$applyTransformations(poseStack, mainHand.getMainHandX(), mainHand.getMainHandY(), mainHand.getMainHandItemScale(), mainHand.getMainHandPositiveX(), mainHand.getMainHandPositiveY(), mainHand.getMainHandPositiveZ());
             } else if (offHand.getRunning()) {
-                liquid_bounce$applyTransformations(poseStack, offHand.getOffHandX(), offHand.getOffHandY(), offHand.getOffHandItemScale(), offHand.getOffHandPositiveX(), offHand.getOffHandPositiveY(), offHand.getOffHandPositiveZ());
+                coffee$applyTransformations(poseStack, offHand.getOffHandX(), offHand.getOffHandY(), offHand.getOffHandItemScale(), offHand.getOffHandPositiveX(), offHand.getOffHandPositiveY(), offHand.getOffHandPositiveZ());
             }
         }
     }
 
     @Unique
-    private static void liquid_bounce$applyTransformations(PoseStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
+    private static void coffee$applyTransformations(PoseStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
         matrices.translate(translateX, translateY, translateZ);
         matrices.mulPose(Axis.XP.rotationDegrees(rotateX));
         matrices.mulPose(Axis.YP.rotationDegrees(rotateY));

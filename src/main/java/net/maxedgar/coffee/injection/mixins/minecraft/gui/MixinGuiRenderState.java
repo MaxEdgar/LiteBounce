@@ -49,13 +49,13 @@ public abstract class MixinGuiRenderState {
     private void clear(CallbackInfo ci) {
         for (GuiRenderState.Node layer : strata) {
             if (layer.elementStates != null) {
-                layer.elementStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
+                layer.elementStates.forEach(coffee$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.elementStates);
                 layer.elementStates = null;
             }
 
             if (layer.glyphStates != null) {
-                layer.glyphStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
+                layer.glyphStates.forEach(coffee$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.glyphStates);
                 layer.glyphStates = null;
             }
@@ -78,7 +78,7 @@ public abstract class MixinGuiRenderState {
     }
 
     @Unique
-    private static final Consumer<ScreenArea> liquid_bounce$tryRecycleMatrix3x2f = element -> {
+    private static final Consumer<ScreenArea> coffee$tryRecycleMatrix3x2f = element -> {
         if (element instanceof PoseReusableGuiElementRenderState t) {
             Pools.Mat3x2f.recycle(t.pose());
         }
