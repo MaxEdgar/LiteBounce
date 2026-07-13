@@ -42,12 +42,12 @@ public abstract class MixinServerboundPlayerInputPacket implements ServerboundPl
     private boolean coffee$forceSneak = false;
 
     @Override
-    public void setLiquidBounce$forceSneak(boolean b) {
+    public void setCoffee$forceSneak(boolean b) {
         this.coffee$forceSneak = b;
     }
 
     @Override
-    public boolean getLiquidBounce$forceSneak() {
+    public boolean getCoffee$forceSneak() {
         return this.coffee$forceSneak;
     }
 

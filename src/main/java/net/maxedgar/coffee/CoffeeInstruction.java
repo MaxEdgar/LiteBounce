@@ -33,16 +33,16 @@ import java.util.stream.Stream;
  * because they are not included in the jar.
  */
 @NullMarked
-public final class LiquidInstruction {
+public final class CoffeeInstruction {
 
-  private LiquidInstruction() {}
+  private CoffeeInstruction() {}
 
   private static Stream<ImageIcon> loadIcons() {
     return Stream.of(
             "/resources/coffee/icon_64x64.png",
             "/resources/coffee/icon_32x32.png",
             "/resources/coffee/icon_16x16.png"
-        ).map(LiquidInstruction.class::getResource)
+        ).map(CoffeeInstruction.class::getResource)
         .filter(Objects::nonNull)
         .map(ImageIcon::new);
   }
@@ -82,7 +82,7 @@ public final class LiquidInstruction {
     switch (result) {
       case 0 -> browse(URI.create("https://github.com/MaxEdgar/CoffeeV2/docs/get-started/manual-installation"));
       case 1 -> browse(URI.create("https://github.com/MaxEdgar/CoffeeV2/download"));
-      case 2 -> browse(URI.create("https://github.com/MaxEdgar/Coffee"));
+      case 2 -> browse(URI.create("https://github.com/MaxEdgar/CoffeeV2"));
       case 3 -> browse(URI.create("https://github.com/MaxEdgar/CoffeeV2/discord"));
       default -> System.exit(0);
     }
